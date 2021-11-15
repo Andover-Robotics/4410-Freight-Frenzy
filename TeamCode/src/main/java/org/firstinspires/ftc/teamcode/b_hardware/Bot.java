@@ -50,7 +50,7 @@ public class Bot {
   }
 
   public void reset(){
-    //TODO: add reset code here
+    //TODO: add reset code here for "emergency stop"
   }
 
   private Bot(OpMode opMode){

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.c_drive.localizer;
 
+import android.util.Log;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.Localizer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -24,18 +26,19 @@ public class SensorFusionLocalizer implements Localizer {
   private Encoder rightEncoder, leftEncoder, centerEncoder;
   private Pose2d rightPose, leftPose, centerPose;
   private SensorFusionData data;
+  private int ticks = 0;
 
   public SensorFusionLocalizer(HardwareMap hardwareMap, BNO055IMU imu1, BNO055IMU imu2){
-    rightPose = GlobalConfig.EncoderValues.sideEncoder;
-    leftPose = GlobalConfig.EncoderValues.sideEncoder.minus(new Pose2d( 0, 2 * GlobalConfig.EncoderValues.sideEncoder.getY(), 0));
+    leftPose = GlobalConfig.EncoderValues.sideEncoder;
+    rightPose = new Pose2d(leftPose.getX(), -leftPose.getY(), leftPose.getHeading());
     centerPose = GlobalConfig.EncoderValues.centerEncoder;
     
     data = new SensorFusionData(hardwareMap, imu1, imu2);
     //TODO: switch encoders around if this doesnt work
-    localizers[0] = new RROdometryLocalizerIMU(leftPose, centerPose, 2, 1, data);
-    localizers[1] = new RROdometryLocalizerIMU(leftPose, centerPose, 2, 2, data);
-    localizers[2] = new RROdometryLocalizerIMU(rightPose, centerPose, 0, 1, data);
-    localizers[3] = new RROdometryLocalizerIMU(rightPose, centerPose, 0, 2, data);
+    localizers[0] = new RROdometryLocalizerIMU(leftPose, centerPose, 0, 1, data);
+    localizers[1] = new RROdometryLocalizerIMU(leftPose, centerPose, 0, 2, data);
+    localizers[2] = new RROdometryLocalizerIMU(rightPose, centerPose, 2, 1, data);
+    localizers[3] = new RROdometryLocalizerIMU(rightPose, centerPose, 2, 2, data);
     localizers[4] = new RROdometryLocalizer(hardwareMap);
 
     positionSum = DoubleStream.of(positionMultipliers).sum();
@@ -55,10 +58,6 @@ public class SensorFusionLocalizer implements Localizer {
     Pose2d mean = new Pose2d(
         sum.vec().div(positionSum),
         sum.getHeading() / headingSum);
-    //TODO find a way to get this to work
-//    for(Localizer l: localizers){
-//        l.setPoseEstimate(mean);
-//      }
     return mean;
   }
 
@@ -79,7 +78,6 @@ public class SensorFusionLocalizer implements Localizer {
     Pose2d mean = new Pose2d(
         sum.vec().div(positionSum),
         sum.getHeading() / headingSum);
-
     return mean;
   }
 
@@ -88,6 +86,13 @@ public class SensorFusionLocalizer implements Localizer {
     data.update();
     for (Localizer l : localizers) {
       l.update();
+    }
+
+    ticks++;
+    if(ticks > 10) {
+      ticks = 0;
+      if(GlobalConfig.SensorFusionValues.averagePose)
+        setPoseEstimate(getPoseEstimate());
     }
   }
 

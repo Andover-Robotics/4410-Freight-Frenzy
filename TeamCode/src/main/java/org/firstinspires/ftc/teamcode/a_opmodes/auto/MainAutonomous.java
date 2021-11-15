@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.b_hardware.Bot;
 import java.util.List;
 
 @Autonomous(name = "Main Autonomous", group = "Competition")
-public class MainAutonomous extends LinearOpMode {//TODO: add reversing for competition
+public class MainAutonomous extends LinearOpMode {
 
   private Bot bot;
 
@@ -69,9 +69,25 @@ public class MainAutonomous extends LinearOpMode {//TODO: add reversing for comp
 //
 //    if (detected == null)
 //      detected = PipelineResult.LEFT;
+    int typeSelect = 0;
+    int detectedSelect = 0;
+    AutoPaths.AutoType[] types = AutoPaths.AutoType.values();
+    PipelineResult[] results = PipelineResult.values();
+    GamepadEx gamepadEx = new GamepadEx(gamepad1);
+    while(!isStarted()){
+      telemetry.addLine("a for detected, b for types");
+      telemetry.addLine("detected " + results[detectedSelect]);
+      telemetry.addLine("types " + types[typeSelect]);
+      telemetry.update();
+      gamepadEx.readButtons();
+      if(gamepadEx.wasJustPressed(Button.A))
+        detectedSelect = (detectedSelect + 1) % results.length;
+      if(gamepadEx.wasJustPressed(Button.B))
+        typeSelect = (typeSelect + 1) % types.length;
 
-    detected = PipelineResult.RIGHT;
-    List<AutoPathElement> trajectories = paths.getTrajectories(detected);
+    }
+
+    List<AutoPathElement> trajectories = paths.getTrajectories(types[typeSelect], results[detectedSelect]);
 //    pipeline.close();
 
 

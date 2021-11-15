@@ -28,7 +28,6 @@ public class RROdometryLocalizer extends ThreeTrackingWheelLocalizer {
   }
 
   public RROdometryLocalizer(HardwareMap hardwareMap, Pose2d sidePose, Pose2d centerPose) {
-    // First calculated in https://docs.google.com/document/d/1s6HzvajxItlIaULulVud0IRhnVrH16yjvsGW4jbwosQ/edit
     super(Arrays.asList(
         new Pose2d(sidePose.getX(), sidePose.getY(), sidePose.getHeading()), // left (relative to front)
         new Pose2d(sidePose.getX(), -sidePose.getY(), sidePose.getHeading()), // right (relative to front)

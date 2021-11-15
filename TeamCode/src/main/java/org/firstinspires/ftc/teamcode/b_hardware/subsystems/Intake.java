@@ -7,13 +7,14 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class Intake extends SubsystemBase {
-    public static final double SPEED = 0.5;
+    public static final double SPEED = 0.8;
     public MotorEx motor;
 
     public Intake(OpMode opMode){
         motor = new MotorEx(opMode.hardwareMap, "intake", Motor.GoBILDA.RPM_1150);
         motor.setRunMode(Motor.RunMode.RawPower);
-        motor.motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        motor.motor.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
     public void run(){

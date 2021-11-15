@@ -28,7 +28,7 @@ public class TestOpMode extends OpMode {
 
     @Override
     public void loop() {
-//        testPath.followPath(bot.drive, bot.roadRunner.localizer);//TODO: make ftclib odometry
+//        testPath.followPath(bot.drive, bot.roadRunner.localizer);//TODO: make ftclib odometry for pure pursuit? or make homemade pure pursuit
 
         //testing music
 //        MediaPlayer.create(hardwareMap.appContext, R.raw.rickroll).start();

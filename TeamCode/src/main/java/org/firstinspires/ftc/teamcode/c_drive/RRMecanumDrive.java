@@ -67,7 +67,7 @@ public class RRMecanumDrive extends MecanumDrive {
   // TODO tune these
   public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(6, 0.15, 0.6);
   public static PIDCoefficients HEADING_PID = new PIDCoefficients(2.8, 0, 0.3);
-
+  //TODO check odometry wheel numbers
   public static double LATERAL_MULTIPLIER = 1;
 
   public static double VX_WEIGHT = 1;
@@ -194,6 +194,11 @@ public class RRMecanumDrive extends MecanumDrive {
     return new TrajectoryBuilder(startPose, startTangent, velConstraint, accelConstraint);
   }
 
+  public TrajectoryBuilder trajectoryBuilder(Trajectory trajectory, double time) {
+    return new TrajectoryBuilder(trajectory, time, velConstraint, accelConstraint);
+  }
+
+
   public void turnAsync(double angle) {
     double heading = getPoseEstimate().getHeading();
 
@@ -242,6 +247,7 @@ public class RRMecanumDrive extends MecanumDrive {
 
     Pose2d currentPose = getPoseEstimate();
     Pose2d lastError = getLastError();
+
 
     poseHistory.add(currentPose);
 

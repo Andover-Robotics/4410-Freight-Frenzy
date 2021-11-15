@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.MarkerCallback
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import org.firstinspires.ftc.teamcode.GlobalConfig
 import org.firstinspires.ftc.teamcode.a_opmodes.auto.pipeline.TemplateDetector
 import org.firstinspires.ftc.teamcode.c_drive.RRMecanumDrive
 import org.firstinspires.ftc.teamcode.b_hardware.Bot
@@ -12,10 +13,14 @@ import java.lang.Math.toRadians
 import kotlin.math.PI
 import kotlin.math.roundToInt
 
-class AutoPaths(val opMode: LinearOpMode) {//TODO: possibly add the TeleOpPaths functionality to this
+class AutoPaths(val opMode: LinearOpMode) {
 
-    //TODO: reverse this
-
+    //TODO: reverse this for alliances
+    enum class AutoType{
+        PARK,
+        CAROUSEL,
+        TESTING
+    }
     sealed class AutoPathElement(open val name: String) {
         class Path(override val name: String, val trajectory: Trajectory): AutoPathElement(name)
         //AutoPathElement.Path(name, trajectory)
@@ -23,10 +28,36 @@ class AutoPaths(val opMode: LinearOpMode) {//TODO: possibly add the TeleOpPaths 
         //AutoPathElement.Action(name) {actions to take(include sleeps)}
     }
 
+    fun p2d(x: Double, y: Double, h: Double): Pose2d{
+        return Pose2d(x, if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) y else -y, if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) h else -h)
+    }
+    fun p2d(v: Vector2d, h: Double): Pose2d{
+        return Pose2d(v.x, if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) v.y else -v.y, if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) h else -h)
+    }
+    fun v2d(x: Double, y: Double): Vector2d{
+        return Vector2d(x, if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) y else -y)
+    }
+    fun bypass(startPose: Pose2d, endPose: Pose2d): Pose2d{
+        val dif = endPose.minus(startPose).vec()
+        return Pose2d(startPose.vec().plus(dif.div(dif.norm() * 10)), startPose.heading)
+    }
+    fun als(d: Double): Double{
+        return if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) d else -d;
+    }
+    fun bypassVec(startVec: Vector2d, endVec: Vector2d): Vector2d{
+        val dif = endVec.minus(startVec)
+        return startVec.plus(dif.div(dif.norm() * 10))
+    }
+    fun bypassStraight(startPose: Pose2d, angle: Double): Pose2d{
+        return Pose2d(startPose.vec().plus(startPose.vec().rotated(angle - 90)), startPose.heading)
+    }
+
     val bot: Bot = Bot.getInstance()
     val drive: RRMecanumDrive = bot.roadRunner
     val Double.toRadians get() = (toRadians(this))
+    val Double.toRadAS get() = (if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) toRadians(this) else -toRadians(this))
     val Int.toRadians get() = (this.toDouble().toRadians)
+    val Int.toRadAS get() = (this.toDouble().toRadAS)
     private fun Pose2d.reverse() = copy(heading = heading + PI)
     private var lastPosition: Pose2d = Pose2d()
 
@@ -80,79 +111,153 @@ class AutoPaths(val opMode: LinearOpMode) {//TODO: possibly add the TeleOpPaths 
     //            4 to Pose2d(48 - 5.1, -48.0 - 3.0556 - 3f, (-90.0 + 30.268).toRadians)
     //    )
 
-    val startPose = Pose2d(0.0, 0.0, 0.0)
+
+    val startPose = p2d(-24.0, -72.0+9.0, -90.0.toRadians)
 
     //TODO: Make Trajectories in trajectorySets
 
-    //                                                                              ====================================================
-    private val trajectorySets: Map<TemplateDetector.PipelineResult, List<AutoPathElement>> = mapOf(
-            //use !! when accessing maps ie: dropSecondWobble[0]!!
-            //example
+    val dropFreight = mapOf(
+        TemplateDetector.PipelineResult.LEFT to listOf(
+            makeAction("test"){
+
+            }
+        ),
+        TemplateDetector.PipelineResult.RIGHT to listOf(
+            makeAction("test"){
+
+            }
+        ),
+        TemplateDetector.PipelineResult.MIDDLE to listOf(
+            makeAction("test"){
+
+            }
+        )
+    )
+
+    val dropFreightPose = mapOf(
+        TemplateDetector.PipelineResult.LEFT to getLastPose(dropFreight[TemplateDetector.PipelineResult.LEFT]!!),
+        TemplateDetector.PipelineResult.RIGHT to getLastPose(dropFreight[TemplateDetector.PipelineResult.RIGHT]!!),
+        TemplateDetector.PipelineResult.MIDDLE to getLastPose(dropFreight[TemplateDetector.PipelineResult.MIDDLE]!!)
+    )
+
+    fun getLastPose(paths: List<AutoPathElement>): Pose2d {
+        for(i in paths.reversed()){
+            if(i is AutoPathElement.Path){
+                return i.trajectory.end()
+            }
+        }
+        return startPose
+    }
+
+    fun park(result: TemplateDetector.PipelineResult): List<AutoPathElement>{
+        return run{
+            dropFreight[result]!! + listOf(
+                makePath("drive into warehouse",
+                    drive.trajectoryBuilder(startPose)
+                        .forward(72.0)
+                        .build())
+            )
+        }
+    }
+
+    fun carousel(result: TemplateDetector.PipelineResult): List<AutoPathElement> {
+        return run {
+            dropFreight[result]!! + listOf(
+                makePath("drive to carousel",
+                    drive.trajectoryBuilder(dropFreightPose[result]!!)
+                        .splineToSplineHeading(p2d(-59.0, -59.0, -135.toRadians), -135.toRadAS)
+                        .build()
+                ),
+                makeAction("do carousel"){
+                    Thread.sleep(2000)
+//                        bot.carousel.stop()
+                },
+                makePath("drive to park",
+                    drive.trajectoryBuilder(lastPosition, 45.toRadAS)
+                        .splineToSplineHeading(p2d(0.0, -72.0+5.3, 0.0), -45.toRadAS)
+                        .build()
+                ),
+                makePath("move into warehouse",
+                    drive.trajectoryBuilder(lastPosition)
+                        .lineToConstantHeading(v2d(48.0, -72.0+5.3))
+                        .build()
+                )
+            )
+        }
+    }
+
+    //                                                                          ====================================================
+    private val trajectorySets: Map<AutoType, Map<TemplateDetector.PipelineResult, List<AutoPathElement>>> = mapOf(
+        AutoType.PARK to mapOf(
+            TemplateDetector.PipelineResult.LEFT to park(TemplateDetector.PipelineResult.LEFT),
+            TemplateDetector.PipelineResult.RIGHT to park(TemplateDetector.PipelineResult.RIGHT),
+            TemplateDetector.PipelineResult.MIDDLE to park(TemplateDetector.PipelineResult.MIDDLE)
+        ),
+        AutoType.CAROUSEL to mapOf(
+            TemplateDetector.PipelineResult.LEFT to carousel(TemplateDetector.PipelineResult.LEFT),
+            TemplateDetector.PipelineResult.RIGHT to carousel(TemplateDetector.PipelineResult.RIGHT),
+            TemplateDetector.PipelineResult.MIDDLE to carousel(TemplateDetector.PipelineResult.MIDDLE)
+        ),
+        AutoType.TESTING to mapOf(
+            TemplateDetector.PipelineResult.MIDDLE to run{
+                listOf(
+                    makePath("do stuff",
+                        drive.trajectoryBuilder(startPose)
+                            .forward(20.0)
+                            .build()
+                    )
+                )
+            },
             TemplateDetector.PipelineResult.LEFT to run{
                 listOf(
-                makePath("forward 4",
-                    drive.trajectoryBuilder(startPose)
-                        .lineToConstantHeading(Vector2d(0.0, 12.0))
-                        .build())
+                    makePath("forward 8",
+                        drive.trajectoryBuilder(startPose)
+                            .lineToConstantHeading(v2d(0.0, 24.0))
+                            .splineToConstantHeading(v2d(0.001, 24.0), 0.0)
+                            .lineToConstantHeading(v2d(24.0, 24.0))
+                            .build())
                 )
             },
             TemplateDetector.PipelineResult.RIGHT to run{
+                val c1 = Pose2d()
+                val c2 = p2d(0.0, 24.0, 90.0.toRadians)
+                val c3 = p2d(24.0, 24.0, 180.0.toRadians)
+                val c4 = p2d(24.0, 0.0, -90.0.toRadians)
                 listOf(
-                    makePath("forward 8",
-                        drive.trajectoryBuilder(startPose)
-                            .lineToConstantHeading(Vector2d(0.0, 24.0))
-                            .build()),
-                    makePath("left 8",
-                        drive.trajectoryBuilder(lastPosition)
-                            .lineToConstantHeading(Vector2d(24.0, 24.0))
-                            .build()),
-                    makePath("back 8",
-                        drive.trajectoryBuilder(lastPosition)
-                            .lineToConstantHeading(Vector2d(24.0, 0.0))
-                            .build()),
-                    makePath("right 8",
-                        drive.trajectoryBuilder(lastPosition)
-                            .lineToConstantHeading(startPose.vec())
-                            .build()),
-                    makeAction("wait for 3 seconds"){
-                        Thread.sleep(3000)
+                    makeAction("set pose"){
+                        drive.poseEstimate = Pose2d()
                     },
-                    makePath("spline forward",
-                        drive.trajectoryBuilder(lastPosition)
-                            .splineTo(Vector2d(24.0, 24.0), 0.0)
-                            .build()),
-                    makePath("spline backward",
-                        drive.trajectoryBuilder(lastPosition, 180.0)
-                            .splineTo(startPose.vec(), 180.0)
-                            .build()),
-                    makeAction("wait for 3 seconds"){
-                        Thread.sleep(3000)
-                    },
-                    makePath("forward 8",
-                        drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(Pose2d(0.0, 24.0, 90.toRadians))
-                            .build()),
-                    makePath("left 8",
-                        drive.trajectoryBuilder(lastPosition)
-                            .lineToLinearHeading(Pose2d(24.0, 24.0, PI))
-                            .build()),
-                    makePath("back 8",
-                        drive.trajectoryBuilder(lastPosition)
-                            .lineToLinearHeading(Pose2d(24.0, 0.0, -90.toRadians))
-                            .build()),
-                    makePath("right 8",
-                        drive.trajectoryBuilder(lastPosition)
-                            .lineToLinearHeading(startPose)
-                            .build())
-
+                    makePath("testing",
+                        drive.trajectoryBuilder(c1)
+                            .lineToConstantHeading(c2.vec())
+                            .splineToConstantHeading(bypassVec(c2.vec(), c3.vec()), 0.0)
+                            .lineToConstantHeading(c3.vec())
+                            .splineToConstantHeading(bypassVec(c3.vec(), c4.vec()), -90.0.toRadAS)
+                            .lineToConstantHeading(c4.vec())
+                            .splineToConstantHeading(bypassVec(c4.vec(), c1.vec()), 180.0.toRadAS)
+                            .lineToConstantHeading(c1.vec())
+                            .splineToConstantHeading(bypassVec(c1.vec(), c3.vec()), 45.0.toRadAS)
+                            .lineToSplineHeading(c3)
+                            .splineToConstantHeading(bypassVec(c3.vec(), c4.vec()), -90.0.toRadAS)
+                            .lineToSplineHeading(c4)
+                            .splineToConstantHeading(bypassVec(c4.vec(), c2.vec()), 135.0.toRadAS)
+                            .lineToSplineHeading(c2)
+                            .splineToConstantHeading(bypassVec(c2.vec(), c1.vec()), -90.0.toRadAS)
+                            .lineToSplineHeading(c1)
+                            .splineToSplineHeading(c4, 0.0)
+                            .splineToSplineHeading(c3, 90.0.toRadAS)
+                            .splineToSplineHeading(c2, 180.0.toRadAS)
+                            .splineToSplineHeading(c1, -90.0.toRadAS)
+                            .build()
+                    )
                 )
             }
-//
+        )
     )
 
 
-    fun getTrajectories(a: TemplateDetector.PipelineResult): List<AutoPathElement>{
-        return trajectorySets[a]!!
+    fun getTrajectories(b: AutoType, a: TemplateDetector.PipelineResult): List<AutoPathElement>{
+        return trajectorySets[b]!![a]!!
     }
 
 

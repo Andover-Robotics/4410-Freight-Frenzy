@@ -9,16 +9,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.GlobalConfig;
 
-@Config
 public class Carousel extends SubsystemBase {
     public static final double SPEED = 0.25;
     private MotorEx motor;
 
     public Carousel(OpMode opMode){
-        motor = new MotorEx(opMode.hardwareMap, "carousel", Motor.GoBILDA.RPM_1150);
+        motor = new MotorEx(opMode.hardwareMap, " carousel", Motor.GoBILDA.RPM_1150);
         motor.setRunMode(Motor.RunMode.RawPower);
         motor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        motor.motor.setDirection(GlobalConfig.alliance == GlobalConfig.Alliance.RED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+        motor.motor.setDirection(GlobalConfig.alliance == GlobalConfig.Alliance.RED ? DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE);
     }
 
     public void run(){

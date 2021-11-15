@@ -69,7 +69,7 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     timingScheduler.run();
 
     //Movement =================================================================================================
-    //TODO: change depending on mode :)
+    //TODO: change depending on mode
     driveSpeed = 1 - 0.35 * (triggerSignal(Trigger.LEFT_TRIGGER) + triggerSignal(Trigger.RIGHT_TRIGGER));
 
     if(justPressed(Button.BACK)){
@@ -150,8 +150,6 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
 
   private void drive(){//Driving ===================================================================================
-    updateState();
-
     final double gyroAngle =
         bot.imu.getAngularOrientation().toAngleUnit(AngleUnit.DEGREES).secondAngle//TODO: make sure that the orientation is correct
             - fieldCentricOffset;
@@ -189,10 +187,12 @@ public class MainTeleOp extends BaseOpMode {//required vars here
   }
 
   private void updateState(){
-    for(Entry<Button, TemplateState> pair : stateMap.get(state).entrySet()){
-      if(justPressed(pair.getKey())){
-        state = pair.getValue();
-        percent = 0;
+    if(!stateMap.isEmpty() && !stateMap.get(state).isEmpty()){
+      for (Entry<Button, TemplateState> pair : stateMap.get(state).entrySet()) {
+        if (justPressed(pair.getKey())) {
+          state = pair.getValue();
+          percent = 0;
+        }
       }
     }
   }

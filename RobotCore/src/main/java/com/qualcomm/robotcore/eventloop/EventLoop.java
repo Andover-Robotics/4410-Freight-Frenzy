@@ -32,6 +32,7 @@ package com.qualcomm.robotcore.eventloop;
 
 import android.hardware.usb.UsbDevice;
 
+import com.qualcomm.robotcore.eventloop.EventLoopManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.usb.RobotUsbModule;

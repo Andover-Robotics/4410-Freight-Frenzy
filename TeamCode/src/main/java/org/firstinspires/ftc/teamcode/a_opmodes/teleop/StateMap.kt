@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.a_opmodes.teleop.MainTeleOp.TemplateState.
 
 
 class StateMap {
-    public var stateMap = mapOf(
+    var stateMap = mapOf(
             INTAKE to mapOf(
                     A to TRANSPORT,
                     B to OUTTAKE

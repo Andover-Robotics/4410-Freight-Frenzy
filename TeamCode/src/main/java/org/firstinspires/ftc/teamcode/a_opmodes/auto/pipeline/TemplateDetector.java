@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class TemplateDetector {//TODO: Change this to control hub
+public class TemplateDetector {//TODO: Change this to control hub?
 
   public enum PipelineResult {
     LEFT(0),
