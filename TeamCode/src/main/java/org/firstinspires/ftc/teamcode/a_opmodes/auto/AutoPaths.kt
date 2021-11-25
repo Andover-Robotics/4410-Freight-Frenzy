@@ -166,11 +166,14 @@ class AutoPaths(val opMode: LinearOpMode) {
                 makePath("drive to carousel",
                     drive.trajectoryBuilder(dropFreightPose[result]!!)
                         .splineToSplineHeading(p2d(-59.0, -59.0, -135.toRadians), -135.toRadAS)
+                        .addSpatialMarker(v2d(-55.0, -55.0)){
+                            bot.carousel.run()
+                        }
                         .build()
                 ),
                 makeAction("do carousel"){
                     Thread.sleep(2000)
-//                        bot.carousel.stop()
+                    bot.carousel.stop()
                 },
                 makePath("drive to park",
                     drive.trajectoryBuilder(lastPosition, 45.toRadAS)

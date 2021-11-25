@@ -6,9 +6,11 @@ import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.teamcode.GlobalConfig;
+
 public class Intake extends SubsystemBase {
-    public static final double SPEED = 0.8;
-    public MotorEx motor;
+    public static final double SPEED = GlobalConfig.SubsystemValues.intakeSpeed;
+    private MotorEx motor;
 
     public Intake(OpMode opMode){
         motor = new MotorEx(opMode.hardwareMap, "intake", Motor.GoBILDA.RPM_1150);
@@ -19,6 +21,14 @@ public class Intake extends SubsystemBase {
 
     public void run(){
         motor.set(SPEED);
+    }
+
+    public void spit(){
+        motor.set(-0.7);
+    }
+
+    public void run(double speed){
+        motor.set(speed);
     }
 
     public void stop(){

@@ -25,6 +25,7 @@ public class MainTeleOp extends BaseOpMode {//required vars here
   private boolean centricity = false;
   private boolean isManual = true;
   private int percent = 1, part = 0;
+  private boolean duck = false;
 
 
 
@@ -51,15 +52,12 @@ public class MainTeleOp extends BaseOpMode {//required vars here
   //If there is a module-specific var, put it in the module class ie slideStage goes in the slides module
 
 
-  private MotorEx carousel;
 
   void subInit() {
     //TODO: initialize subsystems not initialized in bot constructor
     timingScheduler = new TimingScheduler(this);
-    carousel = new MotorEx(hardwareMap, "carousel");
-    carousel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-    carousel.set(0);
   }
+  boolean bucket = false;
 
   @Override
   public void subLoop() {
@@ -70,7 +68,7 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
     //Movement =================================================================================================
     //TODO: change depending on mode
-    driveSpeed = 1 - 0.35 * (triggerSignal(Trigger.LEFT_TRIGGER) + triggerSignal(Trigger.RIGHT_TRIGGER));
+    driveSpeed = 1 - 0.4 * ((buttonSignal(Button.LEFT_BUMPER) ? 1 : 0) + (buttonSignal(Button.RIGHT_STICK_BUTTON) ? 1 : 0));
 
     if(justPressed(Button.BACK)){
       isManual = !isManual;
@@ -85,18 +83,47 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
 
 
-    //TODO: insert actual teleop stuff here
-    if(buttonSignal(Button.DPAD_UP)){
+    if(buttonSignal(Button.Y)){
       bot.carousel.run();
     }else{
       bot.carousel.stop();
     }
 
-    if(buttonSignal(Button.B)){
+    if(buttonSignal(Button.B)) {
       bot.intake.run();
+    }else if(buttonSignal(Button.RIGHT_STICK_BUTTON)) {
+      bot.intake.spit();
     }else{
-      bot.intake.stop();
+      bot.intake.run(triggerSignal(Trigger.RIGHT_TRIGGER));
     }
+    if(justPressed(Button.DPAD_UP)){
+      bot.outtake.armHigh();
+    }
+    if(justPressed(Button.DPAD_RIGHT)){
+      bot.outtake.armMid();
+    }
+    if(justPressed(Button.DPAD_DOWN)){
+      bot.outtake.armLow();
+    }
+    if(justPressed(Button.DPAD_LEFT)){
+      bot.outtake.resetArm();
+    }
+
+    if(justPressed(Button.A)){
+      duck = !duck;
+      if(duck){
+        bot.cosmetics.raiseFlag();
+        bot.cosmetics.runDuck();
+      }else{
+        bot.cosmetics.stopDuck();
+      }
+    }
+
+    if(justPressed(Button.X)){
+      bot.outtake.dropFreight();
+    }
+
+
 
 
     /*//TODO: make control scheme

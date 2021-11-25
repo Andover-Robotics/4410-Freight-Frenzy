@@ -14,7 +14,7 @@ public class RROdometryLocalizerIMU extends TwoTrackingWheelLocalizer {
   public static double TICKS_PER_REV = 8192;
   public static double WHEEL_RADIUS = 38.75 / 2 / 25.4; // in
   public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
-  public static double CENTER_MULT = 24 / 23.55;
+  public static double CENTER_MULT = 1;//TODO change this?
 
   private int encoder1, encoder2 = 1, imu;
   private final SensorFusionData dataSource;
