@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@TeleOp(name = "TBX: Motor Diagnostic", group = "ARC Toolbox")
+@TeleOp(name = "TBX: Motor Diagnostic", group = "Toolbox")
 public class MotorDiagnostic extends OpMode {
   private static int TP_DELTA = 5;
 

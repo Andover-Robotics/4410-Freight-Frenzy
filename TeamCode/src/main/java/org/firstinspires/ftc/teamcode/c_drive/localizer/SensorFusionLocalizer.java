@@ -87,13 +87,13 @@ public class SensorFusionLocalizer implements Localizer {
     for (Localizer l : localizers) {
       l.update();
     }
-
-    ticks++;
-    if(ticks > 10) {
-      ticks = 0;
-      if(GlobalConfig.SensorFusionValues.averagePose)
-        setPoseEstimate(getPoseEstimate());
-    }
+//
+//    ticks++;
+//    if(ticks > 10) {
+//      ticks = 0;
+//      if(GlobalConfig.SensorFusionValues.averagePose)
+//        setPoseEstimate(getPoseEstimate());
+//    }
   }
 
   @Override

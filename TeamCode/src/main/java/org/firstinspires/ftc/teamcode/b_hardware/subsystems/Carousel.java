@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.GlobalConfig;
 
 public class Carousel extends SubsystemBase {
-    public static final double SPEED = GlobalConfig.SubsystemValues.carouselSpeed;
+    public static final double SPEED = 750;
     private MotorEx motor;
 
     public Carousel(OpMode opMode){

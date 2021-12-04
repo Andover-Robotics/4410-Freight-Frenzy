@@ -13,6 +13,9 @@ public class Cosmetics {//Literally a bunch of servos with stuff on them
   private Servo flagArm;
   private CRServo duck;
 
+  public static double flagUp = 0.65;
+  public static double flagDown = 0;
+
   public Cosmetics(OpMode opMode){
     flagArm = opMode.hardwareMap.servo.get("flagArm");
     duck = opMode.hardwareMap.crservo.get("duck");
@@ -28,10 +31,10 @@ public class Cosmetics {//Literally a bunch of servos with stuff on them
   }
 
   public void raiseFlag(){
-    flagArm.setPosition(GlobalConfig.SubsystemValues.CosmeticsValues.flagUp);
+    flagArm.setPosition(flagUp);
   }
 
   public void lowerFlag(){
-    flagArm.setPosition(GlobalConfig.SubsystemValues.CosmeticsValues.flagDown);
+    flagArm.setPosition(flagDown);
   }
 }

@@ -1,15 +1,18 @@
 package org.firstinspires.ftc.teamcode.a_opmodes.auto;
 
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
-import com.arcrobotics.ftclib.gamepad.GamepadKeys.Button;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.GlobalConfig;
 import org.firstinspires.ftc.teamcode.a_opmodes.auto.AutoPaths.AutoPathElement;
 import org.firstinspires.ftc.teamcode.a_opmodes.auto.AutoPaths.AutoPathElement.Action;
 import org.firstinspires.ftc.teamcode.a_opmodes.auto.AutoPaths.AutoPathElement.Path;
-import org.firstinspires.ftc.teamcode.a_opmodes.auto.pipeline.TemplateDetector;
-import org.firstinspires.ftc.teamcode.a_opmodes.auto.pipeline.TemplateDetector.PipelineResult;
+import org.firstinspires.ftc.teamcode.a_opmodes.computervision.Camera;
+import org.firstinspires.ftc.teamcode.a_opmodes.computervision.old.TemplateDetector;
+import org.firstinspires.ftc.teamcode.a_opmodes.computervision.old.TemplateDetector.PipelineResult;
+import org.firstinspires.ftc.teamcode.a_opmodes.computervision.pipelines.BarcodePipeline;
 import org.firstinspires.ftc.teamcode.b_hardware.Bot;
 
 import java.util.List;
@@ -17,30 +20,46 @@ import java.util.List;
 @Autonomous(name = "Main Autonomous", group = "Competition")
 public class MainAutonomous extends LinearOpMode {
 
-  private Bot bot;
+    private Bot bot;
 
-  PipelineResult detected;
-  double confidence;
-  TemplateDetector pipeline;
-  boolean performActions = true;
-  GamepadEx gamepad;
-
-
-  @Override
-  public void runOpMode() throws InterruptedException {
-    Bot.instance = null;
-    bot = Bot.getInstance(this);
-    gamepad = new GamepadEx(gamepad1);
-
-    AutoPaths paths = new AutoPaths(this);
-//    pipeline = new TemplateDetector(this);
-
-    //TODO: add initialization here
-
-    //  ie set servo position                             ========================================================================
+    PipelineResult detected;
+    double confidence;
+    TemplateDetector pipeline;
+    boolean performActions = true;
+    GamepadEx gamepad;
 
 
-    //Pipeline stuff
+    @Override
+    public void runOpMode() throws InterruptedException {
+        Bot.instance = null;
+        bot = Bot.getInstance(this);
+        gamepad = new GamepadEx(gamepad1);
+
+        Camera camera = new Camera(this, "Webcam 1");
+        BarcodePipeline pipeline = new BarcodePipeline();
+        camera.setPipeline(pipeline);
+
+        AutoPaths paths = new AutoPaths(this);
+
+        //TODO: add initialization here
+
+        //  ie set servo position                             ========================================================================
+
+
+        while (!isStarted()) {
+            if (isStopRequested()) {
+                return;
+            }
+            if (gamepad1.x) {
+                performActions = false;
+            }
+            if (gamepad.wasJustPressed(GamepadKeys.Button.Y)) {
+
+            }
+
+        }
+
+        //Pipeline stuff
 
 //    while (!isStarted()) {
 //      if (isStopRequested())
@@ -69,48 +88,35 @@ public class MainAutonomous extends LinearOpMode {
 //
 //    if (detected == null)
 //      detected = PipelineResult.LEFT;
-    int typeSelect = 0;
-    int detectedSelect = 0;
-    AutoPaths.AutoType[] types = AutoPaths.AutoType.values();
-    PipelineResult[] results = PipelineResult.values();
-    GamepadEx gamepadEx = new GamepadEx(gamepad1);
-    while(!isStarted()){
-      telemetry.addLine("a for detected, b for types");
-      telemetry.addLine("detected " + results[detectedSelect]);
-      telemetry.addLine("types " + types[typeSelect]);
-      telemetry.update();
-      gamepadEx.readButtons();
-      if(gamepadEx.wasJustPressed(Button.A))
-        detectedSelect = (detectedSelect + 1) % results.length;
-      if(gamepadEx.wasJustPressed(Button.B))
-        typeSelect = (typeSelect + 1) % types.length;
+        telemetry.addLine(GlobalConfig.alliance + " is selected alliance");
+        telemetry.addLine(GlobalConfig.autoType + " is autoType");
+        telemetry.update();
+        waitForStart();
 
-    }
-
-    List<AutoPathElement> trajectories = paths.getTrajectories(types[typeSelect], results[detectedSelect]);
+        List<AutoPathElement> trajectories = paths.getTrajectories(GlobalConfig.autoType, BarcodePipeline.BarcodeResult.CENTER);
 //    pipeline.close();
 
 
-    //Roadrunner stuff
+        //Roadrunner stuff
 
-    bot.roadRunner.setPoseEstimate(paths.getStartPose());
+        bot.roadRunner.setPoseEstimate(paths.getStartPose());
 
-    if (isStopRequested())
-      return;
+        if (isStopRequested())
+            return;
 
-    for (AutoPathElement item : trajectories) {
+        for (AutoPathElement item : trajectories) {
 
-      telemetry.addData("executing path element", item.getName());
-      telemetry.update();
+            telemetry.addData("executing path element", item.getName());
+            telemetry.update();
 
-      if (item instanceof AutoPathElement.Path) {
-        bot.roadRunner.followTrajectory(((Path) item).getTrajectory());
-      } else if (item instanceof AutoPathElement.Action && performActions) {
-        ((Action) item).getRunner().invoke();
-      }
+            if (item instanceof AutoPathElement.Path) {
+                bot.roadRunner.followTrajectory(((Path) item).getTrajectory());
+            } else if (item instanceof AutoPathElement.Action && performActions) {
+                ((Action) item).getRunner().invoke();
+            }
 
-      if (isStopRequested())
-        return;
+            if (isStopRequested())
+                return;
+        }
     }
-  }
 }

@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.GlobalConfig;
 
 public class Intake extends SubsystemBase {
-    public static final double SPEED = GlobalConfig.SubsystemValues.intakeSpeed;
+    public static final double SPEED = 0.5;
     private MotorEx motor;
 
     public Intake(OpMode opMode){

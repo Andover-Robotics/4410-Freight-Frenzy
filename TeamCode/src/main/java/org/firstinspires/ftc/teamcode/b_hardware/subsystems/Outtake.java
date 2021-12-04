@@ -16,7 +16,18 @@ import org.firstinspires.ftc.teamcode.GlobalConfig;
 public class Outtake extends SubsystemBase {
     private MotorEx motor;
     private Servo bucket;
+    private Servo flap;
     private int target;
+
+    public static int armHigh = -1441;
+    public static int armMid = -888;
+    public static int armLow = -536;
+    public static int armDown = -2763;
+    public static double bucketUp = 0.1;
+    public static double bucketDown = 0.5;
+    public static double flapClose = 0.9;
+    public static double flapOpen = 0.6;
+    
     public static double kS = 0.05;
     public static double kV = 1;
 
@@ -29,6 +40,7 @@ public class Outtake extends SubsystemBase {
         motor.setPositionTolerance(50);
 
         bucket = opMode.hardwareMap.servo.get("bucket");
+        flap = opMode.hardwareMap.servo.get("flap");
     }
     //TODO: test non four bar bucket
 
@@ -37,50 +49,66 @@ public class Outtake extends SubsystemBase {
         motor.setTargetPosition(ticks);
     }
 
+    public void runPeriodic(){
+        ((Runnable)() -> {
+            while(!motor.atTargetPosition()){
+                motor.set(0.3);
+            }
+            motor.stopMotor();
+        }).run();
+        return;
+    }
+
     @Override
     public void periodic() {
         if(motor.atTargetPosition()) {
             motor.stopMotor();
         }else{
             int x = Math.abs(target - motor.getCurrentPosition());
-            motor.set(Math.pow(Math.abs((x * x - 6000 * x) / 18000000.0), 2));
+            motor.set(Math.pow(Math.abs((x * x - 6000 * x) / 18000000.0), 2));//TODO: figure out "spline" power/motor path
             Log.d("armPower", Double.toString(Math.pow(Math.abs((x * x - 6000 * x) / 18000000.0), 2)));
         }
     }
 
-    public void dropFreight(){
-        bucket.setPosition(GlobalConfig.SubsystemValues.OuttakeValues.bucketDown);
+    public void openFlap(){
+        flap.setPosition(flapOpen);
     }
 
-    public void bucketMid(){
-        bucket.setPosition(GlobalConfig.SubsystemValues.OuttakeValues.bucketMid);
+    public void closeFlap(){
+        flap.setPosition(flapClose);
     }
 
-    public void resetBucket(){
-        bucket.setPosition(GlobalConfig.SubsystemValues.OuttakeValues.bucketUp);
+    public void bucketDrop(){
+        bucket.setPosition(bucketDown);
     }
+
+    public void bucketUp(){
+        bucket.setPosition(bucketUp);
+    }
+    
+    
 
     public void resetArm(){
-        resetBucket();
-        goToPosition(GlobalConfig.SubsystemValues.OuttakeValues.armDown);
+        bucketUp();
+        openFlap();
+        goToPosition(armDown);
     }
 
     public void armHigh(){
-        bucketMid();
-        goToPosition(GlobalConfig.SubsystemValues.OuttakeValues.armHigh);
+        closeFlap();
+        bucketDrop();
+        goToPosition(armHigh);
     }
 
     public void armMid(){
-        bucketMid();
-        goToPosition(GlobalConfig.SubsystemValues.OuttakeValues.armMid);
+        closeFlap();
+        bucketDrop();
+        goToPosition(armMid);
     }
 
     public void armLow(){
-        bucketMid();
-        goToPosition(GlobalConfig.SubsystemValues.OuttakeValues.armLow);
-    }
-
-    private void setBucket(int pos){
-        bucket.setPosition(pos);
+        closeFlap();
+        bucketDrop();
+        goToPosition(armLow);
     }
 }

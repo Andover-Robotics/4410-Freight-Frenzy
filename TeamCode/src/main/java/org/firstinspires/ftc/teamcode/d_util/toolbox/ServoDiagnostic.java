@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Map;
 
-@TeleOp(name = "TBX: Servo Diagnostic", group = "ARC Toolbox")
+@TeleOp(name = "TBX: Servo Diagnostic", group = "Toolbox")
 public class ServoDiagnostic extends OpMode {
   private static double POS_DELTA = 0.05;
 

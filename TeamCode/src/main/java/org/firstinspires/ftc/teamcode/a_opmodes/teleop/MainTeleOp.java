@@ -43,11 +43,6 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     TemplateState(double progressRate){this.progressRate = progressRate;}
   }
 
-  Map<TemplateState, Map<Button, TemplateState>> stateMap = new StateMap().getStateMap();
-
-  public TemplateState state = TemplateState.INTAKE;
-
-
   //opmode vars here ==============================================================================================
   //If there is a module-specific var, put it in the module class ie slideStage goes in the slides module
 
@@ -57,7 +52,6 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     //TODO: initialize subsystems not initialized in bot constructor
     timingScheduler = new TimingScheduler(this);
   }
-  boolean bucket = false;
 
   @Override
   public void subLoop() {
@@ -69,10 +63,10 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     //Movement =================================================================================================
     //TODO: change depending on mode
     driveSpeed = 1 - 0.4 * ((buttonSignal(Button.LEFT_BUMPER) ? 1 : 0) + (buttonSignal(Button.RIGHT_STICK_BUTTON) ? 1 : 0));
-
-    if(justPressed(Button.BACK)){
-      isManual = !isManual;
-    }
+//
+//    if(justPressed(Button.BACK)){
+//      isManual = !isManual;
+//    }
 
     if(isManual) {
       drive();
@@ -109,7 +103,11 @@ public class MainTeleOp extends BaseOpMode {//required vars here
       bot.outtake.resetArm();
     }
 
-    if(justPressed(Button.A)){
+    if(justPressed(Button.X)){
+      bot.outtake.openFlap();
+    }
+
+    if(justPressed(Button.LEFT_STICK_BUTTON)){
       duck = !duck;
       if(duck){
         bot.cosmetics.raiseFlag();
@@ -119,9 +117,6 @@ public class MainTeleOp extends BaseOpMode {//required vars here
       }
     }
 
-    if(justPressed(Button.X)){
-      bot.outtake.dropFreight();
-    }
 
 
 
@@ -178,7 +173,7 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
   private void drive(){//Driving ===================================================================================
     final double gyroAngle =
-        bot.imu.getAngularOrientation().toAngleUnit(AngleUnit.DEGREES).secondAngle//TODO: make sure that the orientation is correct
+        bot.imu.getAngularOrientation().toAngleUnit(AngleUnit.DEGREES).secondAngle//TODO: make sure that the orientation + imu axes is correct
             - fieldCentricOffset;
     Vector2d driveVector = stickSignal(Direction.LEFT),
         turnVector = new Vector2d(
@@ -209,20 +204,8 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
   private void followPath(){//Path following ===================================================================================
 
-    updateState();
-
   }
 
-  private void updateState(){
-    if(!stateMap.isEmpty() && !stateMap.get(state).isEmpty()){
-      for (Entry<Button, TemplateState> pair : stateMap.get(state).entrySet()) {
-        if (justPressed(pair.getKey())) {
-          state = pair.getValue();
-          percent = 0;
-        }
-      }
-    }
-  }
 
   private void updateLocalization() {
     bot.roadRunner.update();
