@@ -12,6 +12,7 @@ import org.openftc.easyopencv.OpenCvWebcam;
 
 public class Camera {
     OpenCvWebcam webcam;
+    OpenCvWebcam camera;
     private boolean isOn = true;
 
     public Camera(OpMode opMode, String name) {
@@ -29,8 +30,6 @@ public class Camera {
 
             }
         });
-
-
     }
 
     /*Using the Driver Station Camera Preview Feature
@@ -43,6 +42,7 @@ To use this feature, simply make sure that you've started a streaming session du
  This provides a tap-to-refresh view of the pipeline output.
 
      */
+
 
     public OpenCvWebcam getWebcam() {
         return webcam;

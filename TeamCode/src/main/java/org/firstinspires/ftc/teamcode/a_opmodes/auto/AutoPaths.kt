@@ -4,6 +4,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.MarkerCallback
 import com.acmerobotics.roadrunner.trajectory.Trajectory
+import com.arcrobotics.ftclib.command.*
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.GlobalConfig
 import org.firstinspires.ftc.teamcode.a_opmodes.computervision.pipelines.BarcodePipeline
@@ -15,7 +16,6 @@ import kotlin.math.roundToInt
 
 class AutoPaths(val opMode: LinearOpMode) {
 
-    //TODO: reverse this for alliances
     enum class AutoType{
         PARK,
         PARKWAREHOUSE,
@@ -31,8 +31,9 @@ class AutoPaths(val opMode: LinearOpMode) {
     sealed class AutoPathElement(open val name: String) {
         class Path(override val name: String, val trajectory: Trajectory): AutoPathElement(name)
         //AutoPathElement.Path(name, trajectory)
-        class Action(override val name: String, val runner: () -> Unit): AutoPathElement(name)
+        class Action(override val name: String, val command: CommandBase): AutoPathElement(name)
         //AutoPathElement.Action(name) {actions to take(include sleeps)}
+        class ActionPath(override val name: String, val trajectory: Trajectory, val command: CommandBase): AutoPathElement(name)
     }
 
     fun p2d(x: Double, y: Double, h: Double): Pose2d{
@@ -60,6 +61,7 @@ class AutoPaths(val opMode: LinearOpMode) {
     }
 
     val bot: Bot = Bot.getInstance()
+    val scheduler: CommandScheduler = CommandScheduler.getInstance()
     val drive: RRMecanumDrive = bot.roadRunner
     val Double.toRadians get() = (toRadians(this))
     val Double.toRadAS get() = (if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) toRadians(this) else -toRadians(this))
@@ -75,21 +77,19 @@ class AutoPaths(val opMode: LinearOpMode) {
     }
 
     //Probably won't be used, but here just in case
-    fun makeAction(name: String, action: () -> Unit): AutoPathElement.Action{
-        return AutoPathElement.Action(name, action)
+    fun makeAction(name: String, command: CommandBase): AutoPathElement.Action{
+        return AutoPathElement.Action(name, command)
+        //Redundant but conforms to naming scheme
+    }
+
+    fun makeActionPath(name: String, trajectory: Trajectory, command: CommandBase): AutoPathElement.ActionPath{
+        return AutoPathElement.ActionPath(name, trajectory, command)
         //Redundant but conforms to naming scheme
     }
 
     // Kotlin 1.3 does not support inline instantiation of SAM interfaces
     class MarkerCallbackImpl(val func: () -> Unit): MarkerCallback {
         override fun onMarkerReached() = func()
-    }
-
-    private fun turn(from: Double, to: Double): AutoPathElement.Action {
-        return AutoPathElement.Action("Turn from ${Math.toDegrees(from).roundToInt()}deg" +
-                "to ${Math.toDegrees(to).roundToInt()}deg") {
-            bot.roadRunner.turn(to - from)
-        }
     }
 
 
@@ -121,23 +121,41 @@ class AutoPaths(val opMode: LinearOpMode) {
 
     val dropFreight = if(initSide == InitSide.CAROUSEL) mapOf(//CAROUSEL SIDE
         BarcodePipeline.BarcodeResult.LEFT to listOf(
-            makeAction(""){}
+            makePath("drive into warehouse",
+                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
+                    .strafeTo(v2d(40.0, -72.0+5.5))
+                    .build())
         ),
         BarcodePipeline.BarcodeResult.RIGHT to listOf(
-            makeAction(""){}
+            makePath("drive into warehouse",
+                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
+                    .strafeTo(v2d(40.0, -72.0+5.5))
+                    .build())
         ),
         BarcodePipeline.BarcodeResult.CENTER to listOf(
-            makeAction(""){}
+            makePath("drive into warehouse",
+                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
+                    .strafeTo(v2d(40.0, -72.0+5.5))
+                    .build())
         )
     ) else mapOf(//WAREHOUSE SIDE
         BarcodePipeline.BarcodeResult.LEFT to listOf(
-            makeAction(""){}
+            makePath("drive into warehouse",
+                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
+                    .strafeTo(v2d(40.0, -72.0+5.5))
+                    .build())
         ),
         BarcodePipeline.BarcodeResult.RIGHT to listOf(
-            makeAction(""){}
+            makePath("drive into warehouse",
+                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
+                    .strafeTo(v2d(40.0, -72.0+5.5))
+                    .build())
         ),
         BarcodePipeline.BarcodeResult.CENTER to listOf(
-            makeAction(""){}
+            makePath("drive into warehouse",
+                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
+                    .strafeTo(v2d(40.0, -72.0+5.5))
+                    .build())
         )
     )
 
@@ -197,15 +215,12 @@ class AutoPaths(val opMode: LinearOpMode) {
                     drive.trajectoryBuilder(dropFreightPose[result]!!)
                         .splineToSplineHeading(p2d(-59.0, -59.0, -135.toRadians), -135.toRadAS)
                         .addSpatialMarker(v2d(-55.0, -55.0)){
-                            bot.outtake.resetArm()
-                            bot.carousel.run()
+                            scheduler.schedule(InstantCommand(bot.intakeCarousel::runCarousel, bot.intakeCarousel))
                         }
                         .build()
                 ),
-                makeAction("do carousel"){
-                    Thread.sleep(2000)
-                        bot.carousel.stop()
-                },
+                makeAction("do carousel",
+                    InstantCommand(bot.intakeCarousel::stop, bot.intakeCarousel)),
                 makePath("park",
                     drive.trajectoryBuilder(lastPosition, 45.toRadAS)
                         .splineToSplineHeading(p2d(-72.0 + 9.0, -36.0,  0.0), 180.toRadAS)

@@ -8,9 +8,7 @@ import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.GlobalConfig;
-import org.firstinspires.ftc.teamcode.b_hardware.subsystems.Carousel;
-import org.firstinspires.ftc.teamcode.b_hardware.subsystems.Cosmetics;
-import org.firstinspires.ftc.teamcode.b_hardware.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.b_hardware.subsystems.IntakeCarousel;
 import org.firstinspires.ftc.teamcode.b_hardware.subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.c_drive.RRMecanumDrive;
 
@@ -20,13 +18,8 @@ public class Bot {
   public static Bot instance;
 
 
-  //TODO: Declare subsystems here
-  //example
-  public final Carousel carousel;
-  public final Intake intake;
-  public final Cosmetics cosmetics;
+  public final IntakeCarousel intakeCarousel;
   public final Outtake outtake;
-//  public final TemplateSubsystem templateSubsystem;
 
 
   //required subsystems
@@ -68,12 +61,7 @@ public class Bot {
       e.printStackTrace();
     }
 
-    //TODO: initialize subsystems
-    //example
-//    this.templateSubsystem = new TemplateSubsystem(opMode);
-    this.carousel = new Carousel(opMode);
-    this.intake = new Intake(opMode);
-    this.cosmetics = new Cosmetics(opMode);
+    this.intakeCarousel = new IntakeCarousel(opMode);
     this.outtake = new Outtake(opMode);
 
 

@@ -1,21 +1,14 @@
 package org.firstinspires.ftc.teamcode.a_opmodes.teleop;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys.Button;
-import com.arcrobotics.ftclib.gamepad.GamepadKeys.Trigger;
 import com.arcrobotics.ftclib.geometry.Vector2d;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.util.Direction;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.c_drive.RRMecanumDrive.Mode;
 import org.firstinspires.ftc.teamcode.d_util.utilclasses.TimingScheduler;
-
-import java.util.Map;
-import java.util.Map.Entry;
 
 @TeleOp(name = "Main TeleOp", group = "Competition")
 public class MainTeleOp extends BaseOpMode {//required vars here
@@ -49,7 +42,6 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
 
   void subInit() {
-    //TODO: initialize subsystems not initialized in bot constructor
     timingScheduler = new TimingScheduler(this);
   }
 
@@ -74,48 +66,17 @@ public class MainTeleOp extends BaseOpMode {//required vars here
       followPath();
     }
 
+    if(stickSignal(Direction.RIGHT).magnitude() > 0.01){
+      bot.outtake.moveTurret((int)(stickSignal(Direction.RIGHT).getX() * 20));
+      bot.outtake.moveArm((int)(stickSignal(Direction.RIGHT).getY() * 20));
+    }
+
+    if(Math.abs(stickSignal(Direction.LEFT).getY()) > 0.01){
+      bot.outtake.moveSlides((int)(stickSignal(Direction.LEFT).getY() * 20));
+    }
 
 
 
-    if(buttonSignal(Button.Y)){
-      bot.carousel.run();
-    }else{
-      bot.carousel.stop();
-    }
-
-    if(buttonSignal(Button.B)) {
-      bot.intake.run();
-    }else if(buttonSignal(Button.RIGHT_STICK_BUTTON)) {
-      bot.intake.spit();
-    }else{
-      bot.intake.run(triggerSignal(Trigger.RIGHT_TRIGGER));
-    }
-    if(justPressed(Button.DPAD_UP)){
-      bot.outtake.armHigh();
-    }
-    if(justPressed(Button.DPAD_RIGHT)){
-      bot.outtake.armMid();
-    }
-    if(justPressed(Button.DPAD_DOWN)){
-      bot.outtake.armLow();
-    }
-    if(justPressed(Button.DPAD_LEFT)){
-      bot.outtake.resetArm();
-    }
-
-    if(justPressed(Button.X)){
-      bot.outtake.openFlap();
-    }
-
-    if(justPressed(Button.LEFT_STICK_BUTTON)){
-      duck = !duck;
-      if(duck){
-        bot.cosmetics.raiseFlag();
-        bot.cosmetics.runDuck();
-      }else{
-        bot.cosmetics.stopDuck();
-      }
-    }
 
 
 

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.a_opmodes.auto;
 
+import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -27,14 +28,16 @@ public class MainAutonomous extends LinearOpMode {
     TemplateDetector pipeline;
     boolean performActions = true;
     GamepadEx gamepad;
+    CommandScheduler scheduler;
 
 
     @Override
     public void runOpMode() throws InterruptedException {
         Bot.instance = null;
         bot = Bot.getInstance(this);
-        gamepad = new GamepadEx(gamepad1);
+        scheduler = CommandScheduler.getInstance();
 
+        gamepad = new GamepadEx(gamepad1);
         Camera camera = new Camera(this, "Webcam 1");
         BarcodePipeline pipeline = new BarcodePipeline();
         camera.setPipeline(pipeline);
@@ -111,8 +114,6 @@ public class MainAutonomous extends LinearOpMode {
 
             if (item instanceof AutoPathElement.Path) {
                 bot.roadRunner.followTrajectory(((Path) item).getTrajectory());
-            } else if (item instanceof AutoPathElement.Action && performActions) {
-                ((Action) item).getRunner().invoke();
             }
 
             if (isStopRequested())
