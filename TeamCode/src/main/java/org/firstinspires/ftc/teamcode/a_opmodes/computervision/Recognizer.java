@@ -10,7 +10,6 @@ public class Recognizer<T extends OpenCvPipeline> {
 
     public Recognizer(OpMode opMode, String name, T pipeline){
         this.pipeline = pipeline;
-        camera = new Camera(opMode, name);
-        camera.setPipeline(pipeline);
+        camera = new Camera(opMode, name, pipeline);
     }
 }

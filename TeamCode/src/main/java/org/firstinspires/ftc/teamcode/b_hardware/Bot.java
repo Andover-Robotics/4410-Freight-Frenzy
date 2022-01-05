@@ -21,12 +21,10 @@ public class Bot {
   public final IntakeCarousel intakeCarousel;
   public final Outtake outtake;
 
-
   //required subsystems
   public final MecanumDrive drive;
   public final RRMecanumDrive roadRunner;
   public final BNO055IMU imu;
-//  public final Cosmetics cosmetics;
 //  public Pair<ExpansionHubEx, ExpansionHubEx> hubs = null;
   public OpMode opMode;
 
@@ -63,7 +61,6 @@ public class Bot {
 
     this.intakeCarousel = new IntakeCarousel(opMode);
     this.outtake = new Outtake(opMode);
-
 
 
     //required subsystems

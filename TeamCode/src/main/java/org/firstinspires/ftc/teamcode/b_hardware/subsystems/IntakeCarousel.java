@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.b_hardware.subsystems;
 
+import com.arcrobotics.ftclib.command.Command;
+import com.arcrobotics.ftclib.command.InstantCommand;
 import com.arcrobotics.ftclib.command.SubsystemBase;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
@@ -11,17 +13,19 @@ import org.firstinspires.ftc.teamcode.GlobalConfig;
 public class IntakeCarousel extends SubsystemBase {
     private MotorEx motor;
     public static final int INTAKE = 1000;
-    public static final int CAROUSEL_MAG = 750;
-    private final int CAROUSEL;
+    public static final int CAROUSEL = 400;
 
     public IntakeCarousel(OpMode opMode){
-        motor = new MotorEx(opMode.hardwareMap, "intake", Motor.GoBILDA.RPM_1150);//TODO: find motor rpm
+        motor = new MotorEx(opMode.hardwareMap, "intake", Motor.GoBILDA.RPM_312);
         motor.setRunMode(Motor.RunMode.VelocityControl);
         motor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor.setVeloCoefficients(5, 0, 0.3);
         motor.motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        CAROUSEL = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? CAROUSEL_MAG : -CAROUSEL_MAG;//TODO: test direction
     }
+
+    public Command runCarousel = new InstantCommand(this::runCarousel, this);
+    public Command runIntake = new InstantCommand(this::runIntake, this);
+    public Command stop = new InstantCommand(this::stop, this);
 
     public void runCarousel(){
         runCarousel(CAROUSEL);

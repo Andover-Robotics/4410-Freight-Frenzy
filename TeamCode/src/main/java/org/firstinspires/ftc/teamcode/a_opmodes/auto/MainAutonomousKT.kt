@@ -39,7 +39,7 @@ class MainAutonomousKT : LinearOpMode() {
 
 
 //        gamepad = GamepadEx(gamepad1)
-        val camera = Camera(this, "Webcam 1")
+        val camera = Camera(this, "Webcam 1", BarcodePipeline(telemetry))
         val pipeline = BarcodePipeline()
         camera.setPipeline(pipeline)
         val paths = AutoPaths(this)
@@ -130,6 +130,4 @@ class MainAutonomousKT : LinearOpMode() {
         }
         scheduler.schedule(command)
     }
-
-
 }

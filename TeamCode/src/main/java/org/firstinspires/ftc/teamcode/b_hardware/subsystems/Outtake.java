@@ -1,199 +1,141 @@
 package org.firstinspires.ftc.teamcode.b_hardware.subsystems;
 
-import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.command.CommandBase;
-import com.arcrobotics.ftclib.command.SubsystemBase;
+import com.arcrobotics.ftclib.command.Command;
+import com.arcrobotics.ftclib.command.InstantCommand;
+import com.arcrobotics.ftclib.command.ParallelCommandGroup;
+import com.arcrobotics.ftclib.command.SequentialCommandGroup;
+import com.arcrobotics.ftclib.command.WaitCommand;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Config
-public class Outtake extends SubsystemBase {
-    private MotorEx turret, arm, slides;
-    private Servo leftClaw, rightClaw, bucket;
+import org.firstinspires.ftc.teamcode.GlobalConfig;
 
-    private int turretTarget = 0, armTarget = 0, slidesTarget = 0;
+public class Outtake {
+    private static boolean manual = false;
 
-    public static int slideMin = -10,//TODO find values
-            slideMax = 100;
-    public static double clawClosed = 0,
-            clawOpen = 0.25,
-            armHeight = 100,//in mm
-            slideTicksPerMM = 100,
-            turretTicksPerDegree = Motor.GoBILDA.RPM_312.getCPR()*4/360,
-            armTicksPerDegree = Motor.GoBILDA.RPM_1150.getCPR()*24/360;//TODO: use this and maxachievableticks()
+    private Servo claw, bucket;
 
+    public final OuttakeMotor turret, arm, slides;
+
+    private double clawOpen = 0.35, clawClosed = 0.6;
+    private double bucketIntake = 0.6, bucketDown = 0.4;
+    private boolean isClawOpen = false, isBucketUp = false;
+
+    public static final int turretIntake = 0, armIntake = 0, slidesIntake = 400,
+            slidesClosed = 0, armClosed = 500,
+            armOuttake = 888, slidesOuttake = 1000;
+    public static final int turretOuttake = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? -600 : 600;
 
     public Outtake(OpMode opMode){
-        turret = new MotorEx(opMode.hardwareMap, "turret", Motor.GoBILDA.RPM_312);
-        turret.setRunMode(Motor.RunMode.PositionControl);
-        turret.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        turret.motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        turret.setPositionTolerance(50);
+        turret = new OuttakeMotor(opMode, "turret", Motor.GoBILDA.RPM_312, 1, 0, 0.02, 7, 1000, -1000, 4, 25, 7);//TODO test i coefficient
+        arm = new OuttakeMotor(opMode, "arm", Motor.GoBILDA.RPM_312, 1, 0, 0.015, 30, 1200, -20, 3, 350, 7);
+        slides = new OuttakeMotor(opMode, "slides", Motor.GoBILDA.RPM_312, 1, 0, 0.02, 20, 1500, -20, 3, 35, 7);
 
-        arm = new MotorEx(opMode.hardwareMap, "arm", Motor.GoBILDA.RPM_1150);//TODO: check tolerances and directions
-        arm.setRunMode(Motor.RunMode.PositionControl);
-        arm.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        arm.motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        arm.setPositionTolerance(50);
+        claw = opMode.hardwareMap.servo.get("claw");
+        claw.setDirection(Servo.Direction.FORWARD);
 
-        slides = new MotorEx(opMode.hardwareMap, "slides", Motor.GoBILDA.RPM_312);
-        slides.setRunMode(Motor.RunMode.PositionControl);
-        slides.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        slides.motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        slides.setPositionTolerance(50);
-
-        leftClaw = opMode.hardwareMap.servo.get("leftClaw");
-        rightClaw = opMode.hardwareMap.servo.get("rightClaw");
         bucket = opMode.hardwareMap.servo.get("bucket");
+        bucket.setDirection(Servo.Direction.FORWARD);
     }
 
-    public class ResetToIntake extends CommandBase{
-        private final Sph3d target = new Sph3d(10, 1, 1);
-
-        public ResetToIntake(){
-        }
-
-        @Override
-        public void initialize() {
-            goToRelative(target);
-        }
-
-        @Override
-        public boolean isFinished() {
-            return atTargetPosition();
-        }
+    public Command runToIntake() {
+        return new SequentialCommandGroup(
+                new InstantCommand(this::bucketDown),
+                new InstantCommand(this::closeClaw),
+//                new WaitCommand(1000),
+                slides.new RunTo(slidesClosed),
+                arm.new RunTo(armClosed),
+//                new WaitCommand(1000),
+                turret.new RunTo(turretIntake),
+//                new WaitCommand(1000),
+                new InstantCommand(this::bucketUp),
+                new WaitCommand(300),
+                arm.new RunTo(armIntake),
+//                new WaitCommand(1000),
+                slides.new RunTo(slidesIntake),
+                new InstantCommand(this::openClaw)
+        );
     }
 
-    public class RunToPositionRaw extends CommandBase{
-        private final Sph3d rawTarget;
-
-        public RunToPositionRaw(Sph3d target){
-            rawTarget = target;
-        }
-
-        @Override
-        public void initialize() {
-            goToRaw(rawTarget);
-        }
-
-        @Override
-        public boolean isFinished() {
-            return atTargetPosition();
-        }
+    public Command runToOuttake(){
+        return new SequentialCommandGroup(
+                new InstantCommand(this::closeClaw),
+//                new WaitCommand(1000),
+                slides.new RunTo(slidesClosed),//TODO maintain position
+                new WaitCommand(300),
+                arm.new RunTo(armClosed),
+                new InstantCommand(this::bucketDown),
+                new WaitCommand(300),
+                turret.new RunTo(turretOuttake),
+                arm.new RunTo(armOuttake),
+                slides.new RunTo(slidesOuttake)
+        );
     }
-
-    public class RunToPosition extends CommandBase{
-        private final Sph3d target;
-
-        public RunToPosition(Pose3d target){
-            this.target = target.toSph();
-        }
-
-        public RunToPosition(Sph3d target){
-            this.target = target;
-        }
-
-        @Override
-        public void initialize() {
-            goToRelative(target);
-        }
-
-        @Override
-        public boolean isFinished() {
-            return atTargetPosition();
-        }
+    public Command runToPosition(int turretPos, int armPos, int slidesPos){
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> setManual(false)),
+                new ParallelCommandGroup(turret.new RunTo(turretPos), arm.new RunTo(armPos), slides.new RunTo(slidesPos)),
+                new InstantCommand(() -> setManual(true)));
     }
 
     public boolean atTargetPosition(){
         return turret.atTargetPosition() && arm.atTargetPosition() && slides.atTargetPosition();
     }
-
-    public void setTurret(int pos){
-        turretTarget = pos;
-        turret.setTargetPosition(pos);
+    
+    public void toggleManual(){
+        manual = !manual;
+        turret.setManual(manual);
+        arm.setManual(manual);
+        slides.setManual(manual);
+    }
+    
+    public boolean getManual(){
+        return manual;
     }
 
-    public void setArm(int pos){
-        armTarget = pos;
-        arm.setTargetPosition(pos);
-    }
-
-    public void setSlides(int pos){
-        pos = Math.min(Math.max(slideMin, pos), slideMax);
-        slidesTarget = pos;
-        slides.setTargetPosition(pos);
-    }
-
-    private void goToRaw(Sph3d sph3d){
-        setTurret(turretDegToTicks(sph3d.theta));
-        setArm(armDegToTicks(sph3d.phi));
-        setSlides((int)sph3d.r);
-    }
-
-    private Sph3d calcRel(Sph3d sph3d){
-        //TODO calculate relative to arm center
-        return sph3d;
-    }
-
-    public void goToRelative(Sph3d sph3d){
-        goToRaw(calcRel(sph3d));
-    }
-
-    public void goToRelative(Pose3d pose3d){
-        goToRelative(pose3d.toSph());
-    }
-
-    private int turretDegToTicks(double deg){
-        return (int)(deg * turretTicksPerDegree);//TODO find ticks
-    }
-
-    private int armDegToTicks(double deg){
-        return (int)(deg * armTicksPerDegree);
-    }
-
-    private int slideToTicks(double lengthInMM){
-        return (int)(lengthInMM * slideTicksPerMM);//TODO find this
-    }
-
-    public void moveSlides(int d){//testing only
-        setSlides(slidesTarget + d);
-    }
-
-    public void moveArm(int d){
-        setArm(armTarget + d);
-    }
-
-    public void moveTurret(int d){
-        setTurret(turretTarget + d);
-    }
-
-    @Override
-    public void periodic() {
-        if(turret.atTargetPosition()){
-            turret.stopMotor();
-        }else{
-            turret.set(0.3);
+    public void setManual(boolean m){
+        if(manual != m){
+            toggleManual();
         }
+    }
 
-        if(arm.atTargetPosition()) {
-            arm.stopMotor();
+    public void closeClaw(){
+        isClawOpen = false;
+        claw.setPosition(clawClosed);
+    }
+
+    public void openClaw() {
+        isClawOpen = true;
+        claw.setPosition(clawOpen);
+    }
+
+    public void toggleClaw(){
+        isClawOpen = !isClawOpen;
+        if(isClawOpen){
+            openClaw();
         }else{
-            arm.set(0.3);
-//            int x = Math.abs(target - arm.getCurrentPosition());
-//            arm.set(Math.pow(Math.abs((x * x - 6000 * x) / 18000000.0), 2));//TODO: figure out "spline" power/motor path
-//            Log.d("armPower", Double.toString(Math.pow(Math.abs((x * x - 6000 * x) / 18000000.0), 2)));
-
+            closeClaw();
         }
+    }
 
-        if(slides.atTargetPosition()){
-            slides.stopMotor();
+    public void bucketUp(){
+        isBucketUp = true;
+        bucket.setPosition(bucketIntake);
+    }
+
+    public void bucketDown() {
+        isBucketUp = false;
+        bucket.setPosition(bucketDown);
+    }
+
+    public void toggleBucket(){
+        isBucketUp = !isBucketUp;
+        if(isBucketUp){
+            bucketUp();
         }else{
-            slides.set(0.3);
+            bucketDown();
         }
-
     }
 
     public double toTheta(double y, double x){

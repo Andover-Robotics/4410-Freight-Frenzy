@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.a_opmodes.teleop;
 
 import com.arcrobotics.ftclib.command.CommandScheduler;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys.Button;
 import com.arcrobotics.ftclib.geometry.Vector2d;
 import com.arcrobotics.ftclib.util.Direction;
@@ -54,11 +55,14 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
     //Movement =================================================================================================
     //TODO: change depending on mode
-    driveSpeed = 1 - 0.4 * ((buttonSignal(Button.LEFT_BUMPER) ? 1 : 0) + (buttonSignal(Button.RIGHT_STICK_BUTTON) ? 1 : 0));
+    driveSpeed = 1 - 0.4 * (gamepadEx1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) + gamepadEx1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
 //
 //    if(justPressed(Button.BACK)){
 //      isManual = !isManual;
 //    }
+//
+
+
 
     if(isManual) {
       drive();
@@ -66,18 +70,53 @@ public class MainTeleOp extends BaseOpMode {//required vars here
       followPath();
     }
 
-    if(stickSignal(Direction.RIGHT).magnitude() > 0.01){
-      bot.outtake.moveTurret((int)(stickSignal(Direction.RIGHT).getX() * 20));
-      bot.outtake.moveArm((int)(stickSignal(Direction.RIGHT).getY() * 20));
+    if(buttonSignal(Button.RIGHT_BUMPER)){
+      bot.intakeCarousel.runCarousel();
+    }else if(buttonSignal(Button.B)){
+      bot.intakeCarousel.runIntake();
+    }else{
+      bot.intakeCarousel.stop();
     }
 
-    if(Math.abs(stickSignal(Direction.LEFT).getY()) > 0.01){
-      bot.outtake.moveSlides((int)(stickSignal(Direction.LEFT).getY() * 20));
+    if(bot.outtake.getManual()) {
+      if (Math.abs(gamepadEx2.getRightX()) > 0.1) {
+        bot.outtake.turret.driveManual(-gamepadEx2.getRightX());
+      } else {
+        telemetry.addLine("turret stopped");
+        bot.outtake.turret.stop();
+      }
+
+      if (Math.abs(gamepadEx2.getRightY()) > 0.1) {
+        bot.outtake.arm.driveManual(-gamepadEx2.getRightY());
+      } else {
+        telemetry.addLine("arm stopped");
+        bot.outtake.arm.stop();
+      }
+
+      if (Math.abs(gamepadEx2.getLeftY()) > 0.1) {
+        bot.outtake.slides.driveManual(gamepadEx2.getLeftY());
+      } else {
+        telemetry.addLine("slides stopped");
+        bot.outtake.slides.stop();
+      }
     }
 
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)){
+      CommandScheduler.getInstance().schedule(bot.outtake.runToIntake());
+    }
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)){
+      CommandScheduler.getInstance().schedule(bot.outtake.runToOuttake());
+    }
 
-
-
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.Y)){
+      bot.outtake.toggleManual();
+    }
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.A)){
+      bot.outtake.toggleClaw();
+    }
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.X)){
+      bot.outtake.toggleBucket();
+    }
 
 
 
@@ -129,6 +168,14 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     telemetry.addData("y", bot.roadRunner.getPoseEstimate().getY());
     telemetry.addData("heading", bot.roadRunner.getPoseEstimate().getHeading());
     telemetry.addData("current raw angle", bot.imu.getAngularOrientation().toAngleUnit(AngleUnit.DEGREES).firstAngle);
+
+    telemetry.addData("turret", bot.outtake.turret.getTarget());
+    telemetry.addData("turret current", bot.outtake.turret.getPosition());
+    telemetry.addData("arm", bot.outtake.arm.getTarget());
+    telemetry.addData("arm current", bot.outtake.arm.getPosition());
+    telemetry.addData("slides", bot.outtake.slides.getTarget());
+    telemetry.addData("slides current", bot.outtake.slides.getPosition());
+    telemetry.addData("manual", bot.outtake.getManual());
   }
 
 
@@ -136,9 +183,9 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     final double gyroAngle =
         bot.imu.getAngularOrientation().toAngleUnit(AngleUnit.DEGREES).secondAngle//TODO: make sure that the orientation + imu axes is correct
             - fieldCentricOffset;
-    Vector2d driveVector = stickSignal(Direction.LEFT),
+    Vector2d driveVector = new Vector2d(gamepadEx1.getLeftX(), gamepadEx1.getLeftY()),//TODO switch to only driver 1
         turnVector = new Vector2d(
-            stickSignal(Direction.RIGHT).getX() * Math.abs(stickSignal(Direction.RIGHT).getX()),
+            gamepadEx1.getRightX() * Math.abs(gamepadEx1.getRightX()),
             0);
     if (bot.roadRunner.mode == Mode.IDLE) {
       if (centricity)//epic java syntax

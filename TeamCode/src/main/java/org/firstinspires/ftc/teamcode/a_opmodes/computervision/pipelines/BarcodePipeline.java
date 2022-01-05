@@ -45,6 +45,7 @@ public class BarcodePipeline extends OpenCvPipeline {//TODO: reminder https://ac
     Telemetry telemetry;
 
     public BarcodePipeline() {
+
     }
 
     public BarcodePipeline(Telemetry telemetry) {
@@ -156,6 +157,10 @@ public class BarcodePipeline extends OpenCvPipeline {//TODO: reminder https://ac
             }
         }
 
+        if(filteredContours.isEmpty()){
+            return input;
+        }
+
         double maxBarcode = filteredContours.stream().mapToDouble(m -> m.toList().stream().max(Comparator.comparingDouble(p -> p.y)).get().y).max().getAsDouble();
         filteredContours = filteredContours.stream().filter(m -> m.toList().stream().max(Comparator.comparingDouble(p -> p.y)).get().y > maxBarcode - 25).collect(Collectors.toList());
 
@@ -210,7 +215,7 @@ public class BarcodePipeline extends OpenCvPipeline {//TODO: reminder https://ac
         telemetry.update();
         startTime = System.currentTimeMillis();
 
-        return output;
+        return input;
     }
 
     public BarcodeResult getResult(){

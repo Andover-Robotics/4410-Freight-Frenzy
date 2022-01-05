@@ -12,17 +12,15 @@ import org.openftc.easyopencv.OpenCvWebcam;
 
 public class Camera {
     OpenCvWebcam webcam;
-    OpenCvWebcam camera;
-    private boolean isOn = true;
 
-    public Camera(OpMode opMode, String name) {
+    public Camera(OpMode opMode, String name, OpenCvPipeline pipeline) {
         webcam = OpenCvCameraFactory.getInstance().createWebcam(opMode.hardwareMap.get(WebcamName.class, name));
-        webcam.setPipeline(new BarcodePipeline());
+        webcam.setPipeline(pipeline);
         webcam.setMillisecondsPermissionTimeout(2500);
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);//TODO:check this
+                webcam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);//TODO:check this
             }
 
             @Override
