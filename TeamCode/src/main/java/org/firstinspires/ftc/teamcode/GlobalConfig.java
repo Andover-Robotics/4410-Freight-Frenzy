@@ -36,8 +36,8 @@ public class GlobalConfig {//make all fields final
   }
 
   public static class EncoderValues{
-    public static final Pose2d sideEncoder = new Pose2d(0.1965, 4.5, 0), centerEncoder = new Pose2d(-5.2, 0.75, Math.toRadians(90));
+    public static final Pose2d sideEncoder = new Pose2d(0.1965, 5.5, 0), centerEncoder = new Pose2d(-5.2, 0.75, Math.toRadians(90));
     public static final String leftEncoderPort = "motorFL", rightEncoderPort = "motorBL", centerEncoderPort = "motorFR";
-    public static final Direction leftEncoderDirection = Direction.FORWARD, rightEncoderDirection = Direction.FORWARD, centerEncoderDirection = Direction.REVERSE;
+    public static final Direction leftEncoderDirection = Direction.FORWARD, rightEncoderDirection = Direction.REVERSE, centerEncoderDirection = Direction.FORWARD;
   }
 }

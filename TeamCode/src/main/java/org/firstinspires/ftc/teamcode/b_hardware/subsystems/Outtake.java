@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.GlobalConfig;
 
+// Got rid of the arm
+
 public class Outtake {
     private static boolean manual = false;
 
@@ -18,19 +20,18 @@ public class Outtake {
 
     public final OuttakeMotor turret, arm, slides;
 
-    private double clawOpen = 0.35, clawClosed = 0.6;
-    private double bucketIntake = 0.6, bucketDown = 0.4;
-    private boolean isClawOpen = false, isBucketUp = false;
+    private double clawOpen = 0.75, clawClosed = 0.9, clawOuttake = 0.4;
+    private double bucketIntake = 0.31, bucketOuttake = 0.9;
+    private boolean isClawOuttake = false, isBucketIn = false;
 
-    public static final int turretIntake = 0, armIntake = 0, slidesIntake = 400,
-            slidesClosed = 0, armClosed = 500,
-            armOuttake = 888, slidesOuttake = 1000;
-    public static final int turretOuttake = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? -600 : 600;
+    public static final int turretIntake = 0, armIntake = 1000, slidesIntake = 0,
+            armOuttake = 2000, slidesOuttake = 1400;// reset position - slides in, arm all the way down, turret forward
+    public static final int turretOuttake = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? -400 : 400;
 
     public Outtake(OpMode opMode){
-        turret = new OuttakeMotor(opMode, "turret", Motor.GoBILDA.RPM_312, 1, 0, 0.02, 7, 1000, -1000, 4, 25, 7);//TODO test i coefficient
-        arm = new OuttakeMotor(opMode, "arm", Motor.GoBILDA.RPM_312, 1, 0, 0.015, 30, 1200, -20, 3, 350, 7);
-        slides = new OuttakeMotor(opMode, "slides", Motor.GoBILDA.RPM_312, 1, 0, 0.02, 20, 1500, -20, 3, 35, 7);
+        turret = new OuttakeMotor(opMode, "turret", Motor.GoBILDA.RPM_312, 1, 0, 0.02, 25, 600, -600, 3, 10, 4);//TODO test i coefficient
+        arm = new OuttakeMotor(opMode, "arm", Motor.GoBILDA.RPM_312, 1, 0, 0.015, 150, 3700, -20, 1, 350, 7);
+        slides = new OuttakeMotor(opMode, "slides", Motor.GoBILDA.RPM_312, 1, 0, 0.02, 70, 1700, -20, 3, 300, 7);
 
         claw = opMode.hardwareMap.servo.get("claw");
         claw.setDirection(Servo.Direction.FORWARD);
@@ -40,42 +41,29 @@ public class Outtake {
     }
 
     public Command runToIntake() {
-        return new SequentialCommandGroup(
-                new InstantCommand(this::bucketDown),
-                new InstantCommand(this::closeClaw),
-//                new WaitCommand(1000),
-                slides.new RunTo(slidesClosed),
-                arm.new RunTo(armClosed),
-//                new WaitCommand(1000),
-                turret.new RunTo(turretIntake),
-//                new WaitCommand(1000),
-                new InstantCommand(this::bucketUp),
-                new WaitCommand(300),
-                arm.new RunTo(armIntake),
-//                new WaitCommand(1000),
-                slides.new RunTo(slidesIntake),
-                new InstantCommand(this::openClaw)
-        );
+        if(!isBucketIn) {
+            return new SequentialCommandGroup(
+                    new InstantCommand(this::openClaw),
+                    new InstantCommand(this::bucketIntake),
+                    new WaitCommand(500),
+                    runToPosition(turretIntake, armIntake, slidesIntake)
+            );
+        }else{
+            return runToPosition(turretIntake, armIntake, slidesIntake);
+        }
     }
 
     public Command runToOuttake(){
         return new SequentialCommandGroup(
-                new InstantCommand(this::closeClaw),
-//                new WaitCommand(1000),
-                slides.new RunTo(slidesClosed),//TODO maintain position
-                new WaitCommand(300),
-                arm.new RunTo(armClosed),
-                new InstantCommand(this::bucketDown),
-                new WaitCommand(300),
-                turret.new RunTo(turretOuttake),
-                arm.new RunTo(armOuttake),
-                slides.new RunTo(slidesOuttake)
+                new InstantCommand(this::bucketIntake),
+                runToPosition(turretOuttake, armOuttake, slidesOuttake)
         );
     }
     public Command runToPosition(int turretPos, int armPos, int slidesPos){
         return new SequentialCommandGroup(
                 new InstantCommand(() -> setManual(false)),
                 new ParallelCommandGroup(turret.new RunTo(turretPos), arm.new RunTo(armPos), slides.new RunTo(slidesPos)),
+                new WaitCommand(200),
                 new InstantCommand(() -> setManual(true)));
     }
 
@@ -101,40 +89,45 @@ public class Outtake {
     }
 
     public void closeClaw(){
-        isClawOpen = false;
+        isClawOuttake = false;
         claw.setPosition(clawClosed);
     }
 
     public void openClaw() {
-        isClawOpen = true;
+        isClawOuttake = false;
         claw.setPosition(clawOpen);
     }
 
+    public void outtakeClaw(){
+        isClawOuttake = true;
+        claw.setPosition(clawOuttake);
+    }
+
     public void toggleClaw(){
-        isClawOpen = !isClawOpen;
-        if(isClawOpen){
-            openClaw();
+        isClawOuttake = !isClawOuttake;
+        if(isClawOuttake){
+            outtakeClaw();
         }else{
             closeClaw();
         }
     }
 
-    public void bucketUp(){
-        isBucketUp = true;
+    public void bucketIntake(){
+        isBucketIn = true;
         bucket.setPosition(bucketIntake);
     }
 
-    public void bucketDown() {
-        isBucketUp = false;
-        bucket.setPosition(bucketDown);
+    public void bucketOuttake() {
+        isBucketIn = false;
+        bucket.setPosition(bucketOuttake);
     }
 
     public void toggleBucket(){
-        isBucketUp = !isBucketUp;
-        if(isBucketUp){
-            bucketUp();
+        isBucketIn = !isBucketIn;
+        if(isBucketIn){
+            bucketIntake();
         }else{
-            bucketDown();
+            bucketOuttake();
         }
     }
 

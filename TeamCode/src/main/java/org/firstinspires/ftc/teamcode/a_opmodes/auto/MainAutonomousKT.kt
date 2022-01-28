@@ -94,7 +94,7 @@ class MainAutonomousKT : LinearOpMode() {
             return
         ///TODO add buildable trajectories
         val trajectories =
-            paths.getTrajectories(GlobalConfig.autoType, BarcodePipeline.BarcodeResult.CENTER)
+            paths.getTrajectories(GlobalConfig.autoType, BarcodePipeline.BarcodeResult.LEFT)
         //    pipeline.close();
 
         scheduler.onCommandFinish{

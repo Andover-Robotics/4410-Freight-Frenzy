@@ -29,9 +29,21 @@ public class OuttakeTester extends BaseOpMode{
         timingScheduler.run();
 
         if(gamepad1.b){
-            bot.intakeCarousel.runIntake();
+            bot.intake.runIntake();
+        }else if(gamepad1.left_bumper){
+            bot.intake.spitIntake();
         }else{
-            bot.intakeCarousel.stop();
+            bot.intake.stopIntake();
+        }
+        if(gamepadEx1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)){
+            bot.intake.flipUp();
+        }
+        if(gamepadEx1.wasJustPressed(GamepadKeys.Button.RIGHT_STICK_BUTTON)){
+            bot.intake.flipDown();
+        }
+
+        if(gamepadEx1.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)){
+            CommandScheduler.getInstance().schedule(bot.intake.transferToOuttake);
         }
 
         if(bot.outtake.getManual()) {
@@ -55,10 +67,6 @@ public class OuttakeTester extends BaseOpMode{
                 telemetry.addLine("slides stopped");
                 bot.outtake.slides.stop();
             }
-        }
-
-        if(gamepadEx1.wasJustPressed(GamepadKeys.Button.DPAD_UP)){
-            CommandScheduler.getInstance().schedule(bot.outtake.slides.new RunTo(Outtake.slidesClosed));
         }
 
         if(gamepadEx1.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)){

@@ -65,7 +65,9 @@ public class OuttakeMotor extends SubsystemBase {
     }
 
     public void driveManual(double p){
-        stopped = false;
+        if(Math.abs(p) > 0.1) {
+            stopped = false;
+        }
         if(manual && motor.getCurrentPosition() > LOWERBOUND && motor.getCurrentPosition() < UPPERBOUND) {
             motor.set(p / manualDiv);
         }else if(motor.getCurrentPosition() < LOWERBOUND && p > 0){
@@ -108,7 +110,6 @@ public class OuttakeMotor extends SubsystemBase {
                 motor.setVelocity(getDifference() * posGain + (Double.compare(getDifference(), 0) * staticGain));//TODO change this to more smooth
             }
         }else{
-            target = motor.getCurrentPosition();
             if(stopped){
                 if (atTargetPosition()) {
                     motor.set(0);
@@ -116,6 +117,8 @@ public class OuttakeMotor extends SubsystemBase {
                 } else {
                     motor.setVelocity(getDifference() * posGain + (Double.compare(getDifference(), 0) * staticGain));//TODO change this to more smooth
                 }
+            }else{
+                target = motor.getCurrentPosition();
             }
         }
     }

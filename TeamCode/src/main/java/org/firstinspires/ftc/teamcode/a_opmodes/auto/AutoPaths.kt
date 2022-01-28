@@ -17,8 +17,6 @@ import kotlin.math.roundToInt
 class AutoPaths(val opMode: LinearOpMode) {
 
     enum class AutoType{
-        PARK,
-        PARKWAREHOUSE,
         CAROUSEL,
         TESTING
     }
@@ -113,7 +111,7 @@ class AutoPaths(val opMode: LinearOpMode) {
     //                                                                  ===================================================
     val initSide = when(GlobalConfig.autoType){
         in listOf(AutoType.CAROUSEL) -> InitSide.CAROUSEL
-        in listOf(AutoType.PARKWAREHOUSE, AutoType.PARK) -> InitSide.WAREHOUSE
+        in listOf(AutoType.TESTING) -> InitSide.WAREHOUSE
         else -> InitSide.CAROUSEL
     }
 
@@ -121,41 +119,95 @@ class AutoPaths(val opMode: LinearOpMode) {
 
     val dropFreight = if(initSide == InitSide.CAROUSEL) mapOf(//CAROUSEL SIDE
         BarcodePipeline.BarcodeResult.LEFT to listOf(
-            makePath("drive into warehouse",
-                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                    .strafeTo(v2d(40.0, -72.0+5.5))
-                    .build())
+            makePath("drive to outtake",
+                drive.trajectoryBuilder(startPose)
+                    .lineToConstantHeading(v2d(-36.0, -48.0))
+                    .build()),
+            makeAction("outtake",
+                SequentialCommandGroup(
+                    InstantCommand(bot.outtake::bucketIntake),
+                    bot.outtake.runToPosition(if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) -235 else 235, 2400, 1600),
+                    InstantCommand(bot.outtake::bucketOuttake),
+                    WaitCommand(1000),
+                    bot.outtake.runToIntake()
+                )
+            )
         ),
         BarcodePipeline.BarcodeResult.RIGHT to listOf(
-            makePath("drive into warehouse",
-                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                    .strafeTo(v2d(40.0, -72.0+5.5))
-                    .build())
+            makePath("drive to outtake",
+                drive.trajectoryBuilder(startPose)
+                    .lineToConstantHeading(v2d(-36.0, -48.0))
+                    .build()),
+            makeAction("outtake",
+                SequentialCommandGroup(
+                    InstantCommand(bot.outtake::bucketIntake),
+                    bot.outtake.runToPosition(if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) -235 else 235, 2400, 1600),
+                    InstantCommand(bot.outtake::bucketOuttake),
+                    WaitCommand(1000),
+                    bot.outtake.runToIntake()
+                )
+            )
         ),
         BarcodePipeline.BarcodeResult.CENTER to listOf(
-            makePath("drive into warehouse",
-                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                    .strafeTo(v2d(40.0, -72.0+5.5))
-                    .build())
+            makePath("drive to outtake",
+                drive.trajectoryBuilder(startPose)
+                    .lineToConstantHeading(v2d(-36.0, -48.0))
+                    .build()),
+            makeAction("outtake",
+                SequentialCommandGroup(
+                    InstantCommand(bot.outtake::bucketIntake),
+                    bot.outtake.runToPosition(if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) -235 else 235, 2400, 1600),
+                    InstantCommand(bot.outtake::bucketOuttake),
+                    WaitCommand(1000),
+                    bot.outtake.runToIntake()
+                )
+            )
         )
     ) else mapOf(//WAREHOUSE SIDE
         BarcodePipeline.BarcodeResult.LEFT to listOf(
-            makePath("drive into warehouse",
-                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                    .strafeTo(v2d(40.0, -72.0+5.5))
-                    .build())
+            makePath("drive to outtake",
+                drive.trajectoryBuilder(startPose)
+                    .lineToConstantHeading(v2d(-36.0, -48.0))
+                    .build()),
+            makeAction("outtake",
+                SequentialCommandGroup(
+                    InstantCommand(bot.outtake::bucketIntake),
+                    bot.outtake.runToPosition(if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) -235 else 235, 2400, 1600),
+                    InstantCommand(bot.outtake::bucketOuttake),
+                    WaitCommand(1000),
+                    bot.outtake.runToIntake()
+                )
+            )
         ),
         BarcodePipeline.BarcodeResult.RIGHT to listOf(
-            makePath("drive into warehouse",
-                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                    .strafeTo(v2d(40.0, -72.0+5.5))
-                    .build())
+            makePath("drive to outtake",
+                drive.trajectoryBuilder(startPose)
+                    .lineToConstantHeading(v2d(-36.0, -48.0))
+                    .build()),
+            makeAction("outtake",
+                SequentialCommandGroup(
+                    InstantCommand(bot.outtake::bucketIntake),
+                    bot.outtake.runToPosition(if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) -235 else 235, 2400, 1600),
+                    InstantCommand(bot.outtake::bucketOuttake),
+                    WaitCommand(1000),
+                    bot.outtake.runToIntake()
+                )
+            )
         ),
         BarcodePipeline.BarcodeResult.CENTER to listOf(
-            makePath("drive into warehouse",
-                drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                    .strafeTo(v2d(40.0, -72.0+5.5))
-                    .build())
+            makePath("drive to outtake",
+                drive.trajectoryBuilder(startPose)
+                    .lineToConstantHeading(v2d(-36.0, -48.0))
+                    .build()),
+            makeAction("outtake",
+                SequentialCommandGroup(
+                    InstantCommand(bot.outtake::bucketIntake),
+                    bot.outtake.runToPosition(if(GlobalConfig.alliance == GlobalConfig.Alliance.RED) -235 else 235, 2400, 1600),
+                    InstantCommand(bot.outtake::bucketOuttake),
+                    WaitCommand(1000),
+                    bot.outtake.runToIntake()
+                )
+            )
         )
     )
 
@@ -174,39 +226,7 @@ class AutoPaths(val opMode: LinearOpMode) {
         return startPose
     }
 
-    fun park(result: BarcodePipeline.BarcodeResult): List<AutoPathElement>{
-        return run{
-            dropFreight[result]!! + listOf(
-                    makePath("drive into warehouse",
-                            drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                                    .strafeTo(v2d(40.0, -72.0+5.5))
-                                    .build())
-            )
-        }
-    }
 
-    fun parkWarehouse(result: BarcodePipeline.BarcodeResult): List<AutoPathElement>{
-        return run{
-            dropFreight[result]!! + listOf(
-                    makePath("drive into warehouse",
-                            drive.trajectoryBuilder(p2d(12.0, -72.0 + 6.0, 0.0))
-                                    .strafeTo(v2d(40.0, -72.0+5.5))
-                                    .build()),
-                    makePath("drive in warehouse",
-                            drive.trajectoryBuilder(lastPosition)
-                                    .strafeTo(v2d(40.0, -40.0))
-                                    .build()),
-                    makePath("drive inside warehouse",
-                            drive.trajectoryBuilder(lastPosition)
-                                    .splineToLinearHeading(p2d(72.0-5.5, -40.0, 90.0.toRadians), 0.0)
-                                    .build()),
-                    makePath("drive out of warehouse",
-                            drive.trajectoryBuilder(lastPosition)
-                                    .strafeTo(v2d(72.0-5.5, 40.0))
-                                    .build())
-            )
-        }
-    }
 
     fun carousel(result: BarcodePipeline.BarcodeResult): List<AutoPathElement> {
         return run {
@@ -215,12 +235,16 @@ class AutoPaths(val opMode: LinearOpMode) {
                     drive.trajectoryBuilder(dropFreightPose[result]!!)
                         .splineToSplineHeading(p2d(-59.0, -59.0, -135.toRadians), -135.toRadAS)
                         .addSpatialMarker(v2d(-55.0, -55.0)){
-                            scheduler.schedule(InstantCommand(bot.intakeCarousel::runCarousel, bot.intakeCarousel))
+                            scheduler.schedule(InstantCommand(bot.carousel::runCarousel, bot.carousel))
                         }
                         .build()
                 ),
                 makeAction("do carousel",
-                    InstantCommand(bot.intakeCarousel::stop, bot.intakeCarousel)),
+                    SequentialCommandGroup(
+                        WaitCommand(2000),
+                        InstantCommand(bot.carousel::stopCarousel, bot.carousel)
+                    )
+                ),
                 makePath("park",
                     drive.trajectoryBuilder(lastPosition, 45.toRadAS)
                         .splineToSplineHeading(p2d(-72.0 + 9.0, -36.0,  0.0), 180.toRadAS)
@@ -231,8 +255,6 @@ class AutoPaths(val opMode: LinearOpMode) {
     }
 
     private val trajectorySets: Map<AutoType, Map<BarcodePipeline.BarcodeResult, List<AutoPathElement>>> = mapOf(
-        AutoType.PARK to makeMap(::park),
-        AutoType.PARKWAREHOUSE to makeMap(::parkWarehouse),
         AutoType.CAROUSEL to makeMap(::carousel)
     )
 

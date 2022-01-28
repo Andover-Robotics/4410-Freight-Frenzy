@@ -70,12 +70,25 @@ public class MainTeleOp extends BaseOpMode {//required vars here
       followPath();
     }
 
-    if(buttonSignal(Button.RIGHT_BUMPER)){
-      bot.intakeCarousel.runCarousel();
-    }else if(buttonSignal(Button.B)){
-      bot.intakeCarousel.runIntake();
+
+
+    if(gamepad1.b){
+      bot.intake.runIntake();
+    }else if(gamepad1.left_bumper || gamepad2.left_bumper){
+      bot.intake.spitIntake();
     }else{
-      bot.intakeCarousel.stop();
+      if(!CommandScheduler.getInstance().isScheduled(bot.intake.transferToOuttake)) {
+        bot.intake.stopIntake();
+      }
+    }
+    if(justPressed(Button.RIGHT_BUMPER)){
+      CommandScheduler.getInstance().schedule(bot.intake.transferToOuttake);
+    }
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)){
+      bot.intake.flipUp();
+    }
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.RIGHT_STICK_BUTTON)){
+      bot.intake.flipDown();
     }
 
     if(bot.outtake.getManual()) {
@@ -101,10 +114,10 @@ public class MainTeleOp extends BaseOpMode {//required vars here
       }
     }
 
-    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)){
+    if(justPressed(GamepadKeys.Button.DPAD_LEFT)){
       CommandScheduler.getInstance().schedule(bot.outtake.runToIntake());
     }
-    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)){
+    if(justPressed(GamepadKeys.Button.DPAD_RIGHT)){
       CommandScheduler.getInstance().schedule(bot.outtake.runToOuttake());
     }
 
@@ -114,7 +127,7 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     if(gamepadEx2.wasJustPressed(GamepadKeys.Button.A)){
       bot.outtake.toggleClaw();
     }
-    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.X)){
+    if(justPressed(GamepadKeys.Button.X)){
       bot.outtake.toggleBucket();
     }
 
@@ -123,30 +136,39 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
     /*//TODO: make control scheme
     Controller 1
-    A:      B:      X:      Y:
-    DPAD
-    L:      D:     U:      R:
+    X:
+    O:
+    Square: switch robot field centric or none
+    Triangle: Carousels
+    DPAD: Field centric movement
     Joystick
-    L:Field centric movement
-    R:Set orientation / Rotation (Determine through practice)
-    Trigger L/R: slow driving (maybe)
-    Bumper
-    L:none/switch to previous path      R:none/switch to next path
+    L: Field centric movement
+    R: Set orientation / Rotation (Determine through practice)
+    L Trigger: Eject (Reverse Intake)
+    R Trigger: Take in (Forward Intake)
+    L Bumper: 66% movement speed
+    R Bumper: 66% movement speed
+    NOTE - Both Bumpers: 33% movement speed (really only for mega precise times)
     Other
-    Start:  Back:switch between automation and driving
+    Start:  reset field centric or progress automation 
+    Back: switch between automation and driving
 
     Controller 2
-    A:      B:      X:      Y:
+    X: Flip outtake bucket (Hold)
+    O:
+    Square: Flip Intake upward (Hold)
+    Triangle:
     DPAD
-    L:      D:     U:      R:
+    L:      D: Detract slides    U: Extend slides     R:
     Joystick
-    L:movement/reset field centric or progress automation
-    R:movement/switch robotfield centric or none
+    L: Turret (Set Direction) (Deadzone = rotate with robot base)
+    R: Arm (Direction = Driver's preferance)
     Trigger L/R: slow driving
     Bumper
-    L:none/switch to previous path      R:none/switch to next path
+    L: none/switch to previous path      R:none/switch to next path
     Other
-    Start:  Back:switch between automation and driving
+    Start: reset field centric or progress automation 
+    Back: switch between automation and driving
      */
 
 
