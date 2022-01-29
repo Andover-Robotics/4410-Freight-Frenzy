@@ -7,7 +7,7 @@ import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-public class OuttakeMotor extends SubsystemBase {
+public class OuttakeMotorCopy extends SubsystemBase {
     private MotorEx motor;
     private int target = 0;
     private final int TOLERANCE,
@@ -20,13 +20,13 @@ public class OuttakeMotor extends SubsystemBase {
     private boolean manual = false, stopped = false;
 
     
-    public OuttakeMotor(OpMode opMode, String name, Motor.GoBILDA rpm, double kp, double ki, double kd, int tol, int ub, int lb, int md, int sg, int pg){
+    public OuttakeMotorCopy(OpMode opMode, String name, Motor.GoBILDA rpm, double kp, double ki, double kd, int tol, int ub, int lb, int md, int sg, int pg){
         motor = new MotorEx(opMode.hardwareMap, name, rpm);
-        motor.setRunMode(Motor.RunMode.PositionControl);// changed from VelocityControl
+        motor.setRunMode(Motor.RunMode.VelocityControl);// changed from VelocityControl
         motor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor.motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        // motor.setVeloCoefficients(kp, ki, kd);
-        motor.setPositionCoefficient(kp);
+        motor.setVeloCoefficients(kp, ki, kd);
+        //motor.setPositionCoefficient(kp);
         TOLERANCE = tol;
         UPPERBOUND = ub;
         LOWERBOUND = lb;
@@ -40,7 +40,7 @@ public class OuttakeMotor extends SubsystemBase {
         private int target;
         public RunTo(int t) {
             target = t;
-            addRequirements(OuttakeMotor.this);
+            addRequirements(OuttakeMotorCopy.this);
         }
 
         @Override
@@ -106,8 +106,8 @@ public class OuttakeMotor extends SubsystemBase {
             if (atTargetPosition()) {
                 motor.stopMotor();
             } else {
-                //motor.setVelocity(getDifference() * posGain + (Double.compare(getDifference(), 0) * staticGain));//TODO change this to more smooth
-                motor.setTargetPosition(getDifference() + posGain);
+                motor.setVelocity(getDifference() * posGain + (Double.compare(getDifference(), 0) * staticGain));//TODO change this to more smooth
+                //motor.setTargetPosition(getDifference() + posGain);
             }
         }else{
             target = motor.getCurrentPosition();
@@ -116,8 +116,8 @@ public class OuttakeMotor extends SubsystemBase {
                     motor.set(0);
                     motor.stopMotor();
                 } else {
-                    //motor.setVelocity(getDifference() * posGain + (Double.compare(getDifference(), 0) * staticGain));//TODO change this to more smooth
-                    motor.setTargetPosition(getDifference() + posGain);
+                    motor.setVelocity(getDifference() * posGain + (Double.compare(getDifference(), 0) * staticGain));//TODO change this to more smooth
+                    //motor.setTargetPosition(getDifference() + posGain);
                 }
             }
         }
