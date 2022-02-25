@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.GlobalConfig;
 import org.firstinspires.ftc.teamcode.b_hardware.subsystems.Carousel;
 import org.firstinspires.ftc.teamcode.b_hardware.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.b_hardware.subsystems.Outtake;
+import org.firstinspires.ftc.teamcode.b_hardware.subsystems.NewOuttake;
 import org.firstinspires.ftc.teamcode.c_drive.RRMecanumDrive;
 
 public class Bot {
@@ -21,7 +21,7 @@ public class Bot {
 
   public final Intake intake;
   public final Carousel carousel;
-  public final Outtake outtake;
+  public final NewOuttake outtake;
 
   //required subsystems
   public final MecanumDrive drive;
@@ -50,6 +50,12 @@ public class Bot {
     //TODO: add reset code here for "emergency stop"
   }
 
+  public void init(){
+    intake.init();
+    outtake.init();
+    carousel.init();
+  }
+
   private Bot(OpMode opMode){
     this.opMode = opMode;
     enableAutoBulkRead();
@@ -63,7 +69,7 @@ public class Bot {
 
     this.intake = new Intake(opMode);
     this.carousel = new Carousel(opMode);
-    this.outtake = new Outtake(opMode);
+    this.outtake = new NewOuttake(opMode);
 
 
     //required subsystems

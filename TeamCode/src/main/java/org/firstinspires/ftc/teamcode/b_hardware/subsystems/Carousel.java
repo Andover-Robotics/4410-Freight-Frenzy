@@ -1,26 +1,54 @@
 package org.firstinspires.ftc.teamcode.b_hardware.subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.SubsystemBase;
+import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import org.firstinspires.ftc.teamcode.GlobalConfig;
 
+@Config
 public class Carousel extends SubsystemBase {
-    private CRServo carouselRed;
-    private CRServo carouselBlue;
+    private final OpMode opMode;
+    private MotorEx motor;
+    private boolean running = false;
+
+    public static int SPEED = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? 1000 : -1000;
 
     public Carousel (OpMode opMode) {
-       carouselRed = opMode.hardwareMap.crservo.get("carouselRed");
-       carouselBlue = opMode.hardwareMap.crservo.get("carouselBlue");
+        this.opMode = opMode;
+
+        motor = new MotorEx(opMode.hardwareMap, "carousel", Motor.GoBILDA.RPM_1150);
+        motor.setRunMode(Motor.RunMode.VelocityControl);
+        motor.setVeloCoefficients(1, 0, 0);
+        motor.motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        motor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+
+        SPEED = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? 1000 : -1000;
+    }
+
+    public void init(){
+        SPEED = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? 1000 : -1000;
     }
 
     public void runCarousel(){
-       carouselRed.setPower(1);
-       carouselBlue.setPower(1);
+        running = true;
+        motor.set(SPEED);
     }
 
     public void stopCarousel(){
-       carouselRed.setPower(0);
-       carouselBlue.setPower(0);
+        running = false;
+        motor.set(0);
     }
 
+    @Override
+    public void periodic() {
+        if(running){
+            motor.set(SPEED);
+        }else{
+            motor.set(0);
+        }
+    }
 }

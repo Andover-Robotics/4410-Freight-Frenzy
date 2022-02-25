@@ -182,10 +182,16 @@ public class FtcRobotControllerActivity extends Activity
 
   protected class RobotRestarter implements Restarter {
 
-    public void requestRestart() throws FileNotFoundException, XmlPullParserException {
-      requestRobotRestart();
+    @Override
+    public void requestRestart() {
+      try {
+        requestRobotRestart();
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      } catch (XmlPullParserException e) {
+        e.printStackTrace();
+      }
     }
-
   }
 
   protected boolean serviceShouldUnbind = false;

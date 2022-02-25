@@ -3,13 +3,11 @@ package org.firstinspires.ftc.teamcode.a_opmodes.auto
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.arcrobotics.ftclib.command.*
 import com.arcrobotics.ftclib.gamepad.GamepadEx
-import com.arcrobotics.ftclib.gamepad.GamepadKeys
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.GlobalConfig
 import org.firstinspires.ftc.teamcode.a_opmodes.auto.AutoPaths.AutoPathElement
 import org.firstinspires.ftc.teamcode.a_opmodes.computervision.Camera
-import org.firstinspires.ftc.teamcode.a_opmodes.computervision.old.TemplateDetector
 import org.firstinspires.ftc.teamcode.a_opmodes.computervision.old.TemplateDetector.PipelineResult
 import org.firstinspires.ftc.teamcode.a_opmodes.computervision.pipelines.BarcodePipeline
 import org.firstinspires.ftc.teamcode.b_hardware.Bot
@@ -18,8 +16,7 @@ import org.firstinspires.ftc.teamcode.b_hardware.Bot
 class MainAutonomousKT : LinearOpMode() {
     lateinit var bot: Bot
     lateinit var detected: PipelineResult
-    lateinit var pipeline: TemplateDetector
-    var performActions = true
+    private var performActions = true
     lateinit var gamepad: GamepadEx
     lateinit var scheduler: CommandScheduler
     var currentPath = 0
@@ -48,6 +45,8 @@ class MainAutonomousKT : LinearOpMode() {
         //TODO: add initialization here
 
         //  ie set servo position                             ========================================================================
+        scheduler.schedule(bot.outtake.runInwards(600, 0));
+        bot.init();
         while (!isStarted) {
             if (isStopRequested) {
                 return
@@ -55,6 +54,12 @@ class MainAutonomousKT : LinearOpMode() {
             if (gamepad1.x) {
                 performActions = false
             }
+
+            scheduler.run()
+
+      // keep getting results from the pipeline
+            telemetry.addLine("result " + pipeline.result.toString())
+            telemetry.addLine("\n performActions " + performActions)
             telemetry.addLine(GlobalConfig.alliance.toString() + " is selected alliance")
             telemetry.addLine(GlobalConfig.autoType.toString() + " is autoType")
             telemetry.update()
@@ -63,23 +68,7 @@ class MainAutonomousKT : LinearOpMode() {
         //Pipeline stuff
 
 //    while (!isStarted()) {
-//      if (isStopRequested())
-//        return;
-//      // keep getting results from the pipeline
-//      pipeline.currentlyDetected()
-//          .ifPresent((pair) -> {
-//            telemetry.addData("detected", pair.first);
-//            telemetry.addData("confidence", pair.second);
-//            telemetry.update();
-//            detected = pair.first;
-//            confidence = pair.second;
-//          });
-//      if (gamepad1.x) {
-//        performActions = false;
-//      }
-//      if (gamepad.wasJustPressed(Button.Y)) {
-//        pipeline.saveImage();
-//      }
+//
 //    }
 //
 //    pipeline.currentlyDetected().ifPresent(pair -> {
@@ -97,37 +86,67 @@ class MainAutonomousKT : LinearOpMode() {
             paths.getTrajectories(GlobalConfig.autoType, BarcodePipeline.BarcodeResult.LEFT)
         //    pipeline.close();
 
-        scheduler.onCommandFinish{
-            currentPath++;
-            if(currentPath >= trajectories.size){
-                requestOpModeStop()
-            }else{
-                scheduleElement(trajectories, currentPath)
-            }
+
+
+        val commands: SequentialCommandGroup = SequentialCommandGroup()
+        for(i in trajectories.indices){
+            commands.addCommands(getCommand(trajectories, i))
         }
+        scheduler.schedule(commands)
 
         //Roadrunner stuff
         bot.roadRunner.poseEstimate = paths.startPose
-        scheduleElement(trajectories, 0);
+
+//
+//        scheduler.onCommandFinish{
+//        Log.d("autonomous", "finished command")
+//            currentPath++;
+//            if(currentPath >= trajectories.size){
+//                requestOpModeStop()
+//            }else{
+//                scheduleElement(trajectories, currentPath)
+//            }
+//        }
+//        scheduleElement(trajectories, 0);
+//
         while(!isStopRequested){
             scheduler.run()
-            telemetry.addData("running ", trajectories[currentPath].name)
-            telemetry.update()
+//            telemetry.addData("running ", trajectories[currentPath].name)
+//            telemetry.update()
         }
+
     }
 
     private fun scheduleElement(trajectories: List<AutoPathElement>, currentPath: Int){
+        scheduler.schedule(getCommand(trajectories, currentPath))
+    }
+
+    private fun getCommand(trajectories: List<AutoPathElement>, currentPath: Int): CommandBase{
         val command: CommandBase
         if(trajectories[currentPath] is AutoPathElement.Path){
             command = FollowTrajectory(bot, (trajectories[currentPath] as AutoPathElement.Path).trajectory)
         }else if(trajectories[currentPath] is AutoPathElement.Action){
-            command = (trajectories[currentPath] as AutoPathElement.Action).command
+            command = if(performActions) {
+                (trajectories[currentPath] as AutoPathElement.Action).command
+            }else{
+                WaitCommand(1000)
+            }
         }else{
-            command = ParallelCommandGroup(
-                FollowTrajectory(bot, (trajectories[currentPath] as AutoPathElement.ActionPath).trajectory),
-                (trajectories[currentPath] as AutoPathElement.ActionPath).command
-            )
+            command = if(performActions) {
+                ParallelCommandGroup(
+                        FollowTrajectory(
+                                bot,
+                                (trajectories[currentPath] as AutoPathElement.ActionPath).trajectory
+                        ),
+                        (trajectories[currentPath] as AutoPathElement.ActionPath).command
+                )
+            }else{
+                FollowTrajectory(
+                        bot,
+                        (trajectories[currentPath] as AutoPathElement.ActionPath).trajectory
+                )
+            }
         }
-        scheduler.schedule(command)
+        return command
     }
 }

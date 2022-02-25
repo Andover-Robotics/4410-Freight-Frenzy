@@ -44,6 +44,7 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
   void subInit() {
     timingScheduler = new TimingScheduler(this);
+    bot.init();
   }
 
   @Override
@@ -55,7 +56,7 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
     //Movement =================================================================================================
     //TODO: change depending on mode
-    driveSpeed = 1 - 0.4 * (gamepadEx1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) + gamepadEx1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
+    driveSpeed = 1 - 0.35 * (gamepadEx1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) + gamepadEx1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
 //
 //    if(justPressed(Button.BACK)){
 //      isManual = !isManual;
@@ -71,64 +72,51 @@ public class MainTeleOp extends BaseOpMode {//required vars here
     }
 
 
-
-    if(gamepad1.b){
+    // First man ----------
+    if(gamepad1.a){
       bot.intake.runIntake();
-    }else if(gamepad1.left_bumper || gamepad2.left_bumper){
+    }else if(gamepad1.b){
       bot.intake.spitIntake();
+    }else if(gamepad1.dpad_right){
+      bot.intake.runSlow();
     }else{
-      if(!CommandScheduler.getInstance().isScheduled(bot.intake.transferToOuttake)) {
+      if(!CommandScheduler.getInstance().isScheduled(bot.intake.transferToOuttake())) {
         bot.intake.stopIntake();
       }
     }
-    if(justPressed(Button.RIGHT_BUMPER)){
-      CommandScheduler.getInstance().schedule(bot.intake.transferToOuttake);
-    }
-    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)){
-      bot.intake.flipUp();
-    }
-    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.RIGHT_STICK_BUTTON)){
-      bot.intake.flipDown();
+
+    if(gamepad1.y || gamepad1.dpad_left){
+      bot.carousel.runCarousel();
+    }else{
+      bot.carousel.stopCarousel();
     }
 
-    if(bot.outtake.getManual()) {
-      if (Math.abs(gamepadEx2.getRightX()) > 0.1) {
-        bot.outtake.turret.driveManual(-gamepadEx2.getRightX());
-      } else {
-        telemetry.addLine("turret stopped");
-        bot.outtake.turret.stop();
-      }
-
-      if (Math.abs(gamepadEx2.getRightY()) > 0.1) {
-        bot.outtake.arm.driveManual(-gamepadEx2.getRightY());
-      } else {
-        telemetry.addLine("arm stopped");
-        bot.outtake.arm.stop();
-      }
-
-      if (Math.abs(gamepadEx2.getLeftY()) > 0.1) {
-        bot.outtake.slides.driveManual(gamepadEx2.getLeftY());
-      } else {
-        telemetry.addLine("slides stopped");
-        bot.outtake.slides.stop();
-      }
+    if(gamepadEx1.wasJustPressed(Button.X)){
+      CommandScheduler.getInstance().schedule(bot.intake.transferToOuttake());
     }
 
-    if(justPressed(GamepadKeys.Button.DPAD_LEFT)){
+    // Second man ----------
+    bot.outtake.slides.driveManual(gamepadEx2.getLeftY());
+    bot.outtake.turret.driveManual(-gamepadEx2.getRightX());
+
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.B)){
       CommandScheduler.getInstance().schedule(bot.outtake.runToIntake());
     }
-    if(justPressed(GamepadKeys.Button.DPAD_RIGHT)){
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.A)){
       CommandScheduler.getInstance().schedule(bot.outtake.runToOuttake());
     }
 
-    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.Y)){
-      bot.outtake.toggleManual();
-    }
-    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.A)){
-      bot.outtake.toggleClaw();
-    }
-    if(justPressed(GamepadKeys.Button.X)){
+    if(gamepadEx2.wasJustPressed(GamepadKeys.Button.X)){
       bot.outtake.toggleBucket();
+    }
+    if(gamepadEx2.wasJustPressed(Button.Y)){
+      bot.outtake.toggleClamp();
+    }
+
+    if(gamepadEx1.wasJustPressed(Button.DPAD_UP)){
+      bot.intake.flipShared();
+    }else if(gamepadEx1.wasJustPressed(Button.DPAD_DOWN)){
+      bot.intake.flipDown();
     }
 
 
@@ -193,39 +181,36 @@ public class MainTeleOp extends BaseOpMode {//required vars here
 
     telemetry.addData("turret", bot.outtake.turret.getTarget());
     telemetry.addData("turret current", bot.outtake.turret.getPosition());
-    telemetry.addData("arm", bot.outtake.arm.getTarget());
-    telemetry.addData("arm current", bot.outtake.arm.getPosition());
     telemetry.addData("slides", bot.outtake.slides.getTarget());
     telemetry.addData("slides current", bot.outtake.slides.getPosition());
-    telemetry.addData("manual", bot.outtake.getManual());
   }
 
 
   private void drive(){//Driving ===================================================================================
     final double gyroAngle =
-        bot.imu.getAngularOrientation().toAngleUnit(AngleUnit.DEGREES).secondAngle//TODO: make sure that the orientation + imu axes is correct
-            - fieldCentricOffset;
+            bot.imu.getAngularOrientation().toAngleUnit(AngleUnit.DEGREES).secondAngle//TODO: make sure that the orientation + imu axes is correct
+                    - fieldCentricOffset;
     Vector2d driveVector = new Vector2d(gamepadEx1.getLeftX(), gamepadEx1.getLeftY()),//TODO switch to only driver 1
-        turnVector = new Vector2d(
-            gamepadEx1.getRightX() * Math.abs(gamepadEx1.getRightX()),
-            0);
+            turnVector = new Vector2d(
+                    gamepadEx1.getRightX() * Math.abs(gamepadEx1.getRightX()),
+                    0);
     if (bot.roadRunner.mode == Mode.IDLE) {
       if (centricity)//epic java syntax
         bot.drive.driveFieldCentric(
-            driveVector.getX() * driveSpeed,
-            driveVector.getY() * driveSpeed,
-            turnVector.getX() * driveSpeed,
-            gyroAngle);
+                driveVector.getX() * driveSpeed,
+                driveVector.getY() * driveSpeed,
+                turnVector.getX() * driveSpeed,
+                gyroAngle);
       else
         bot.drive.driveRobotCentric(
-            driveVector.getX() * driveSpeed,
-            driveVector.getY() * driveSpeed,
-            turnVector.getX() * driveSpeed
+                driveVector.getX() * driveSpeed,
+                driveVector.getY() * driveSpeed,
+                turnVector.getX() * driveSpeed
         );
     }
     if (justPressed(Button.LEFT_STICK_BUTTON)) {
       fieldCentricOffset = bot.imu.getAngularOrientation()
-          .toAngleUnit(AngleUnit.DEGREES).firstAngle;
+              .toAngleUnit(AngleUnit.DEGREES).firstAngle;
     }
     if(justPressed(Button.RIGHT_STICK_BUTTON)){
       centricity = !centricity;

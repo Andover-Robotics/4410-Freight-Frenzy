@@ -8,6 +8,16 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 public class DuckPipeline extends OpenCvPipeline {
 
+    public enum DuckResult {
+        LEFT,
+        CENTER,
+        RIGHT;
+
+        @Override
+        public String toString() { return super.toString(); }
+
+    }
+
     @Override
     public Mat processFrame(Mat input) {
         Mat copy = new Mat();
@@ -24,4 +34,6 @@ public class DuckPipeline extends OpenCvPipeline {
         Core.inRange(input, new Scalar(low_H, low_S, low_V), new Scalar(high_H, high_S, high_V), copy);
         return copy;
     }
+
+
 }
