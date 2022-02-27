@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.b_hardware.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.Command;
-import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.InstantCommand;
 import com.arcrobotics.ftclib.command.ParallelRaceGroup;
 import com.arcrobotics.ftclib.command.RunCommand;
@@ -25,17 +24,16 @@ public class Intake extends SubsystemBase {
     private ColorSensor sensor;
 
     private boolean isTransfering = false;
-    public static int INTAKE = (int) (Motor.GoBILDA.RPM_312.getAchievableMaxTicksPerSecond());
-    public static int HOLDING = 300;
-    public static int SPIT = -(int) (Motor.GoBILDA.RPM_312.getAchievableMaxTicksPerSecond());
+    public static double INTAKE = 0.9;
+    public static double HOLDING = 0.5;
+    public static double SPIT = -0.9;
     public static double FLIP_DOWN = 1.0, FLIP_UP = 0.25, FLIP_SHARED = 0.75;
 
     public Intake (OpMode opMode) {
         this.opMode = opMode;
         intake = new MotorEx(opMode.hardwareMap, "intake", Motor.GoBILDA.RPM_312);
-        intake.setRunMode(Motor.RunMode.VelocityControl);
+        intake.setRunMode(Motor.RunMode.RawPower);
         intake.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        intake.setVeloCoefficients(1, 0, 0);
         intake.motor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         flip = opMode.hardwareMap.servo.get("flip");
@@ -87,7 +85,7 @@ public class Intake extends SubsystemBase {
     }
 
     public void runSlow(){
-        intake.set(-100);
+        intake.set(-0.1);
     }
 
     public void spitIntake() {

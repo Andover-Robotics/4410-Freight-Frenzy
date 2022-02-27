@@ -39,11 +39,12 @@ public class BarcodePipeline extends OpenCvPipeline {//TODO: reminder https://ac
     Telemetry telemetry;
 
     public BarcodePipeline() {
-
+        isRed = GlobalConfig.alliance == GlobalConfig.Alliance.RED;
     }
 
     public BarcodePipeline(Telemetry telemetry) {
         this.telemetry = telemetry;
+        isRed = GlobalConfig.alliance == GlobalConfig.Alliance.RED;
     }
 
     Mat blur = new Mat(),

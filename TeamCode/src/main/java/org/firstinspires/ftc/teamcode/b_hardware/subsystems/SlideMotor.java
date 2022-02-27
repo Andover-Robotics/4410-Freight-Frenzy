@@ -19,13 +19,6 @@ public class SlideMotor extends SubsystemBase {
 
     private TouchSensor limit;
 
-    enum SlideState{
-        IDLE,
-        RETRACTING,
-        RUNNING
-    }
-    SlideState slideState = SlideState.IDLE;
-
     public SlideMotor(OpMode opMode, String name, String limit, Motor.GoBILDA rpm, PIDController controller, DcMotorSimple.Direction direction, int tol, int ub, int lb, double md){
         motor = new PIDMotor(opMode.hardwareMap, name, rpm);
         motor.setRunMode(Motor.RunMode.PositionControl);
@@ -84,7 +77,6 @@ public class SlideMotor extends SubsystemBase {
 
         @Override
         public void end(boolean interrupted) {
-            slideState = SlideState.IDLE;
             motor.setTargetPosition(motor.getCurrentPosition());
             manual = true;
         }

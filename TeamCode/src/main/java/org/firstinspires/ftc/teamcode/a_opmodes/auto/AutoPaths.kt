@@ -207,11 +207,7 @@ class AutoPaths(val opMode: LinearOpMode) {
                         .build()
                 ),
                 makeAction("do carousel",
-                    SequentialCommandGroup(
-                            InstantCommand(bot.carousel::runCarousel, bot.carousel),
-                            WaitCommand(3000),
-                            InstantCommand(bot.carousel::stopCarousel, bot.carousel)
-                    )
+                    bot.carousel.RunCarousel(opMode)
                 ),
                 makePath("park",
                     drive.trajectoryBuilder(lastPosition, 45.toRadAS)

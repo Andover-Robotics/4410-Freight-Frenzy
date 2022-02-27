@@ -8,14 +8,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.GlobalConfig
 import org.firstinspires.ftc.teamcode.a_opmodes.auto.AutoPaths.AutoPathElement
 import org.firstinspires.ftc.teamcode.a_opmodes.computervision.Camera
-import org.firstinspires.ftc.teamcode.a_opmodes.computervision.old.TemplateDetector.PipelineResult
 import org.firstinspires.ftc.teamcode.a_opmodes.computervision.pipelines.BarcodePipeline
 import org.firstinspires.ftc.teamcode.b_hardware.Bot
 
 @Autonomous(name = "Main Autonomous KT", group = "Competition")
 class MainAutonomousKT : LinearOpMode() {
     lateinit var bot: Bot
-    lateinit var detected: PipelineResult
+    lateinit var detected: BarcodePipeline.BarcodeResult
     private var performActions = true
     lateinit var gamepad: GamepadEx
     lateinit var scheduler: CommandScheduler

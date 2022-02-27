@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.GlobalConfig;
 @Config
-public class NewOuttake {
+public class Outtake {
     private final OpMode opMode;
     public final TurretMotor turret;
     public final SlideMotor slides;
@@ -20,15 +20,18 @@ public class NewOuttake {
 
 
 
-    public static double BUCKET_RIGHT_DOWN = 0.17, BUCKET_RIGHT_OUTTAKE = 0.7, BUCKET_LEFT_DOWN = 0.23, BUCKET_LEFT_OUTTAKE = 0.75, CLAMP_CLOSED = 0.6, CLAMP_OPEN = 0.1;
+    public static double BUCKET_RIGHT_DOWN = 0.17, BUCKET_RIGHT_OUTTAKE = 0.7, BUCKET_RIGHT_SHARED = 0.95,
+            BUCKET_LEFT_DOWN = 0.23, BUCKET_LEFT_OUTTAKE = 0.75, BUCKET_LEFT_SHARED = 1,
+            CLAMP_CLOSED = 0.6, CLAMP_OPEN = 0.1;
     private boolean bucketDown = true, clampClosed = true;
 
-    public static int TURRET_INTAKE = 0, TURRET_OUTTAKE = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? -400 : 400, SLIDES_INTAKE = -10, SLIDES_OUTTAKE = 500;
+    public static int TURRET_INTAKE = 0, TURRET_OUTTAKE = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? -400 : 400, TURRET_SHARED = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? 500 : -500,
+            SLIDES_INTAKE = -10, SLIDES_OUTTAKE = 500, SLIDES_SHARED = 50;
     
-    public NewOuttake(OpMode opMode){
+    public Outtake(OpMode opMode){
         this.opMode = opMode;
 
-        slides = new SlideMotor(opMode, "slides", "slidesLimit", Motor.GoBILDA.RPM_1620, GlobalConfig.SLIDES_PID, DcMotorSimple.Direction.REVERSE, 15, 750, -20 , 1.4);
+        slides = new SlideMotor(opMode, "slides", "slidesLimit", Motor.GoBILDA.RPM_312, GlobalConfig.SLIDES_PID, DcMotorSimple.Direction.REVERSE, 15, 750, -20 , 1.4);
         turret = new TurretMotor(opMode, "turret", Motor.GoBILDA.RPM_312, GlobalConfig.TURRET_PID, DcMotorSimple.Direction.FORWARD, 16, 600, -600, 4);
 
         bucketLeft = opMode.hardwareMap.servo.get("bucketLeft");
@@ -46,6 +49,7 @@ public class NewOuttake {
         closeClamp();
 
         TURRET_OUTTAKE = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? -400 : 400;
+        TURRET_SHARED = GlobalConfig.alliance == GlobalConfig.Alliance.RED ? 500 : -500;
     }
 
     public Command runToOuttake(){
@@ -53,6 +57,14 @@ public class NewOuttake {
                 new InstantCommand(this::closeClamp),
                 new InstantCommand(this::bucketOuttake),
                 runOutwards(TURRET_OUTTAKE, SLIDES_OUTTAKE)
+        );
+    }
+
+    public Command runToShared(){
+        return new SequentialCommandGroup(
+                new InstantCommand(this::closeClamp),
+                new InstantCommand(this::bucketOuttake),
+                runOutwards(TURRET_SHARED, SLIDES_SHARED)
         );
     }
 
