@@ -125,7 +125,7 @@ Released on 18 December 2020
  - Updates to SDK v6.1
  - Fixes issue #9
 
-### 6.0A
+### 6.0Afdsafdsa
 
 Released on 25 September 2020
 
